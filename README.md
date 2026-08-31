@@ -174,3 +174,9 @@ git diff --check
 ```
 
 构建成功后，`dist/` 中会包含所有中文、英文和文章静态页面，可部署到任意静态站点托管服务。
+
+## 自动发布
+
+Hacker News 抓取、星期天AI双语文章生成、GitHub Actions 定时任务和 Cloudflare Pages 部署方案见：
+
+- `docs/automated-publishing.md`
