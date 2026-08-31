@@ -12,7 +12,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^7.2.9"
+    "@astrojs/vue": "^7.0.2",
+    "astro": "^7.2.9",
+    "vue": "^3.5.42"
   },
   "allowScripts": {
     "esbuild": true
