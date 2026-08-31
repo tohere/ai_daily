@@ -1,6 +1,9 @@
 ---
-type Locale = 'zh' | 'en';
-const { locale } = Astro.props as { locale: Locale };
+import type { Locale, Post } from '../../data/posts';
+import PostList from '../blog/PostList.astro';
+
+interface Props { locale: Locale; posts: Post[]; }
+const { locale, posts } = Astro.props;
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 ---
@@ -16,16 +19,5 @@ const basePath = isZh ? '/zh' : '/en';
     <div><p class="section-eyebrow">Writing</p><h2 id="latest-title" class="section-heading__title">{isZh ? '最近更新' : 'Latest notes'}</h2></div>
     <a class="section-heading__link" href={basePath + '/archives/'}>{isZh ? '查看归档 →' : 'View archives →'}</a>
   </div>
-  <article class="post-preview">
-    <div class="post-preview__meta"><span>2026 / 08 / 31</span><span>{isZh ? '阅读 · 5 min' : '5 min read'}</span></div>
-    <h3 class="post-preview__title"><a href={basePath + '/posts/designing-a-calm-ai-workflow/'}>{isZh ? '为 AI 工作流保留一点安静的空间' : 'Making room for calm in an AI workflow'}</a></h3>
-    <p class="post-preview__excerpt">{isZh ? '先从整理输入、减少切换和建立可复用的上下文开始，让工具真正服务于思考。' : 'Start by organizing inputs, reducing context switching, and building reusable context so tools can serve the thinking.'}</p>
-    <div class="post-preview__tags"><span class="post-tag">AI</span><span class="post-tag">{isZh ? '效率' : 'Productivity'}</span></div>
-  </article>
-  <article class="post-preview">
-    <div class="post-preview__meta"><span>2026 / 08 / 28</span><span>{isZh ? '阅读 · 4 min' : '4 min read'}</span></div>
-    <h3 class="post-preview__title"><a href={basePath + '/posts/notes-on-digital-garden/'}>{isZh ? '数字花园不只是一个网站' : 'A digital garden is more than a website'}</a></h3>
-    <p class="post-preview__excerpt">{isZh ? '它更像一套让想法持续生长的工作方式：允许草稿存在，也允许观点不断修正。' : 'It is a way of letting ideas grow: drafts are welcome, and opinions are allowed to change over time.'}</p>
-    <div class="post-preview__tags"><span class="post-tag">{isZh ? '写作' : 'Writing'}</span><span class="post-tag">{isZh ? '知识管理' : 'Knowledge'}</span></div>
-  </article>
+  <PostList posts={posts} locale={locale} />
 </section>

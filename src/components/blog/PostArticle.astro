@@ -1,0 +1,31 @@
+---
+import type { Locale, Post } from '../../data/posts';
+import { formatDate } from '../../utils/blog';
+
+interface Props { post: Post; locale: Locale; }
+const { post, locale } = Astro.props;
+const basePath = locale === 'zh' ? '/zh' : '/en';
+---
+
+<article class="post-article">
+  <header class="post-article__header">
+    <a class="post-article__back" href={basePath + '/'}>← {locale === 'zh' ? '返回首页' : 'Back home'}</a>
+    <p class="post-article__eyebrow">{post.category[locale]}</p>
+    <h1 class="post-article__title">{post.title[locale]}</h1>
+    <div class="post-article__meta"><time datetime={post.date}>{formatDate(post.date, locale)}</time><span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' min' : ' min read'}</span></div>
+  </header>
+
+  <div class="post-article__body">
+    {post.content[locale].map((block) => {
+      if (block.type === 'heading') return <h2>{block.text[locale]}</h2>;
+      if (block.type === 'quote') return <blockquote>{block.text[locale]}</blockquote>;
+      if (block.type === 'code') return <pre><code>{block.code}</code></pre>;
+      return <p>{block.text[locale]}</p>;
+    })}
+  </div>
+
+  <footer class="post-article__footer">
+    <div class="post-preview__tags">{post.tags[locale].map((tag) => <span class="post-tag">{tag}</span>)}</div>
+    <a class="post-article__back" href={basePath + '/archives/'}>{locale === 'zh' ? '浏览更多文章 →' : 'Browse more posts →'}</a>
+  </footer>
+</article>

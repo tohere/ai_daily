@@ -1,0 +1,13 @@
+---
+import BlogLayout from '../../../layouts/BlogLayout.astro';
+import PostArticle from '../../../components/blog/PostArticle.astro';
+import { posts } from '../../../data/posts';
+import { locales } from '../../../utils/blog';
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) => posts.map((post) => ({ params: { lang: locale, slug: post.slug }, props: { locale, post } })));
+}
+
+const { locale, post } = Astro.props;
+---
+<BlogLayout locale={locale} title={post.title[locale]} description={post.excerpt[locale]}><PostArticle post={post} locale={locale} /></BlogLayout>

@@ -2,13 +2,13 @@
 import { computed, shallowRef } from 'vue'
 
 type Locale = 'zh' | 'en'
-const props = defineProps<{ locale: Locale }>()
+const props = defineProps<{ locale: Locale; languagePath?: string }>()
 const isMenuOpen = shallowRef(false)
 const copy = computed(() => props.locale === 'zh'
   ? { home: '首页', archives: '归档', about: '关于', language: 'English', menu: '打开菜单', closeMenu: '关闭菜单' }
   : { home: 'Home', archives: 'Archives', about: 'About', language: '中文', menu: 'Open menu', closeMenu: 'Close menu' })
 const basePath = computed(() => (props.locale === 'zh' ? '/zh' : '/en'))
-const languagePath = computed(() => (props.locale === 'zh' ? '/en/' : '/zh/'))
+const languagePath = computed(() => props.languagePath ?? (props.locale === 'zh' ? '/en/' : '/zh/'))
 function closeMenu() { isMenuOpen.value = false }
 </script>
 

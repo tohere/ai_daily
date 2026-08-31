@@ -1,0 +1,22 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import { locales } from '../../utils/blog';
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { lang: locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props;
+const isZh = locale === 'zh';
+---
+<BlogLayout locale={locale} title={isZh ? '关于 · AI Daily' : 'About · AI Daily'}>
+  <section class="page-intro" aria-labelledby="about-title">
+    <p class="section-eyebrow">About</p>
+    <h1 id="about-title" class="page-intro__title">{isZh ? '关于这个小站' : 'About this little site'}</h1>
+    <p class="page-intro__description">{isZh ? 'AI Daily 是一个关于人工智能、产品和持续学习的个人博客。' : 'AI Daily is a personal blog about artificial intelligence, product craft, and continuous learning.'}</p>
+  </section>
+  <div class="prose-page">
+    <p>{isZh ? '这里不追逐所有热点，只记录那些值得反复思考、亲手尝试和长期观察的主题。' : 'This site does not try to chase every trend. It keeps notes on topics worth thinking about, trying by hand, and observing over time.'}</p>
+    <p>{isZh ? '主题本身使用 Astro 生成页面，并用 Vue 处理需要交互的部分。希望它足够轻，也足够适合慢慢写作。' : 'The theme uses Astro to generate pages and Vue for the interactions that need state. The goal is to keep it light and comfortable for slow writing.'}</p>
+  </div>
+</BlogLayout>

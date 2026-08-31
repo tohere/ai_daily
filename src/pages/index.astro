@@ -1,5 +1,7 @@
 ---
 import BlogLayout from '../layouts/BlogLayout.astro';
 import HomePreview from '../components/home/HomePreview.astro';
+import { posts } from '../data/posts';
+import { sortPosts } from '../utils/blog';
 ---
-<BlogLayout locale="zh"><HomePreview locale="zh" /></BlogLayout>
+<BlogLayout locale="zh"><HomePreview locale="zh" posts={sortPosts(posts).slice(0, 3)} /></BlogLayout>

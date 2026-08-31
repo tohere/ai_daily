@@ -1,0 +1,14 @@
+---
+import BlogLayout from '../../layouts/BlogLayout.astro';
+import HomePreview from '../../components/home/HomePreview.astro';
+import { locales } from '../../utils/blog';
+import { sortPosts, } from '../../utils/blog';
+import { posts } from '../../data/posts';
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { lang: locale }, props: { locale } }));
+}
+
+const { locale } = Astro.props;
+---
+<BlogLayout locale={locale}><HomePreview locale={locale} posts={sortPosts(posts).slice(0, 3)} /></BlogLayout>

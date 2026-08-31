@@ -1,6 +1,7 @@
 ---
 import BlogHeader from '../components/layout/BlogHeader.vue';
 import BlogSidebar from '../components/layout/BlogSidebar.vue';
+import { getLocalizedPath } from '../utils/blog';
 import '../styles/global.css';
 
 type Locale = 'zh' | 'en';
@@ -8,6 +9,7 @@ interface Props { locale: Locale; title?: string; description?: string; }
 const { locale, title = locale === 'zh' ? 'AI Daily · 记录智能时代' : 'AI Daily · Notes for the intelligent age', description = locale === 'zh' ? '记录人工智能、产品设计与持续学习。' : 'Notes on artificial intelligence, product craft, and continuous learning.' } = Astro.props;
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
+const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
 ---
 
 <!doctype html>
@@ -21,7 +23,7 @@ const basePath = isZh ? '/zh' : '/en';
   </head>
   <body>
     <div class="site-container">
-      <BlogHeader locale={locale} client:load />
+      <BlogHeader locale={locale} languagePath={languagePath} client:load />
       <div class="page-layout">
         <BlogSidebar locale={locale} />
         <main id="main-content" class="main-content"><slot /></main>
