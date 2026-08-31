@@ -9,7 +9,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "content:hn:preview": "node scripts/article-pipeline/preview-hn.mjs",
+    "test:content": "node --test scripts/article-pipeline/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/vue": "^7.0.2",
