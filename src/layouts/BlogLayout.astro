@@ -1,12 +1,14 @@
 ---
 import BlogHeader from '../components/layout/BlogHeader.vue';
 import BlogSidebar from '../components/layout/BlogSidebar.vue';
+import BackToTop from '../components/ui/BackToTop.vue';
+import ReadingProgress from '../components/ui/ReadingProgress.vue';
 import { getLocalizedPath } from '../utils/blog';
 import '../styles/global.css';
 
 type Locale = 'zh' | 'en';
-interface Props { locale: Locale; title?: string; description?: string; }
-const { locale, title = locale === 'zh' ? 'AI Daily · 记录智能时代' : 'AI Daily · Notes for the intelligent age', description = locale === 'zh' ? '记录人工智能、产品设计与持续学习。' : 'Notes on artificial intelligence, product craft, and continuous learning.' } = Astro.props;
+interface Props { locale: Locale; title?: string; description?: string; showReadingProgress?: boolean; }
+const { locale, title = locale === 'zh' ? 'AI Daily · 记录智能时代' : 'AI Daily · Notes for the intelligent age', description = locale === 'zh' ? '记录人工智能、产品设计与持续学习。' : 'Notes on artificial intelligence, product craft, and continuous learning.', showReadingProgress = false } = Astro.props;
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
@@ -18,21 +20,42 @@ const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#f7f9fb" />
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem('ai-daily-theme');
+          const theme = saved === 'dark' || saved === 'light'
+            ? saved
+            : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.style.colorScheme = theme;
+          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#171b20' : '#f7f9fb');
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
   </head>
   <body>
+    {showReadingProgress && <ReadingProgress client:load />}
+    <a class="skip-link" href="#main-content">{isZh ? '跳到主要内容' : 'Skip to main content'}</a>
     <div class="site-container">
       <BlogHeader locale={locale} languagePath={languagePath} client:load />
       <div class="page-layout">
         <BlogSidebar locale={locale} />
-        <main id="main-content" class="main-content"><slot /></main>
-        <aside class="right-rail" aria-label={isZh ? '站点信息' : 'Site information'}>
-          <section class="rail-card"><h2 class="rail-card__title">{isZh ? '现在正在做什么' : 'Now'}</h2><p class="rail-card__text">{isZh ? '整理一套更适合长期写作与阅读的数字花园。' : 'Building a calmer digital garden for long-form writing and reading.'}</p></section>
-          <section class="rail-card"><h2 class="rail-card__title">{isZh ? '快速入口' : 'Explore'}</h2><ul class="rail-card__list"><li><a href={basePath + '/archives/'}>{isZh ? '浏览全部文章' : 'Browse all posts'}</a></li><li><a href={basePath + '/categories/'}>{isZh ? '按分类查看' : 'Browse by category'}</a></li><li><a href={basePath + '/tags/'}>{isZh ? '按标签查看' : 'Browse by tag'}</a></li></ul></section>
+        <main id="main-content" class="main-content" tabindex="-1"><slot /></main>
+        <aside class="right-rail" aria-label={isZh ? '补充导航' : 'Complementary navigation'}>
+          <slot name="rail">
+            <section class="rail-card"><h2 class="rail-card__title">{isZh ? '现在正在做什么' : 'Now'}</h2><p class="rail-card__text">{isZh ? '整理一套更适合长期写作与阅读的数字花园。' : 'Building a calmer digital garden for long-form writing and reading.'}</p></section>
+            <section class="rail-card"><h2 class="rail-card__title">{isZh ? '快速入口' : 'Explore'}</h2><ul class="rail-card__list"><li><a href={basePath + '/archives/'}>{isZh ? '浏览全部文章' : 'Browse all posts'}</a></li><li><a href={basePath + '/categories/'}>{isZh ? '按分类查看' : 'Browse by category'}</a></li><li><a href={basePath + '/tags/'}>{isZh ? '按标签查看' : 'Browse by tag'}</a></li></ul></section>
+          </slot>
         </aside>
       </div>
       <footer class="page-footer">© {new Date().getFullYear()} AI Daily · {isZh ? '用好奇心记录变化' : 'Documenting change with curiosity'}</footer>
     </div>
+    <BackToTop locale={locale} client:load />
   </body>
 </html>

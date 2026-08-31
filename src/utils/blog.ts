@@ -1,6 +1,11 @@
 import { posts } from '../data/posts'
 import type { Locale, Post } from '../data/posts'
 
+export interface PostHeading {
+  id: string
+  text: string
+}
+
 export const locales: Locale[] = ['zh', 'en']
 
 export function isLocale(value: string | undefined): value is Locale {
@@ -28,6 +33,23 @@ export function sortPosts(items: Post[]): Post[] {
 
 export function findPost(slug: string | undefined): Post | undefined {
   return posts.find((post) => post.slug === slug)
+}
+
+export function getPostHeadings(post: Post, locale: Locale): PostHeading[] {
+  const usedIds = new Map<string, number>()
+  return post.content[locale]
+    .filter((block) => block.type === 'heading')
+    .map((block, index) => {
+      const text = block.type === 'heading' ? block.text[locale] : ''
+      const baseId = text
+        .normalize('NFKC')
+        .toLocaleLowerCase(locale === 'zh' ? 'zh-CN' : 'en-US')
+        .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
+        .replace(/^-+|-+$/g, '') || `section-${index + 1}`
+      const count = usedIds.get(baseId) ?? 0
+      usedIds.set(baseId, count + 1)
+      return { id: count === 0 ? baseId : `${baseId}-${count + 1}`, text }
+    })
 }
 
 export function collectCategories(locale: Locale): Array<{ name: string; count: number }> {

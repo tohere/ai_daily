@@ -1,13 +1,19 @@
 ---
 import BlogLayout from '../../../layouts/BlogLayout.astro';
 import PostArticle from '../../../components/blog/PostArticle.astro';
+import TableOfContents from '../../../components/blog/TableOfContents.vue';
 import { posts } from '../../../data/posts';
-import { locales } from '../../../utils/blog';
+import { getPostHeadings, locales } from '../../../utils/blog';
 
 export function getStaticPaths() {
   return locales.flatMap((locale) => posts.map((post) => ({ params: { lang: locale, slug: post.slug }, props: { locale, post } })));
 }
 
 const { locale, post } = Astro.props;
+const headings = getPostHeadings(post, locale);
 ---
-<BlogLayout locale={locale} title={post.title[locale]} description={post.excerpt[locale]}><PostArticle post={post} locale={locale} /></BlogLayout>
+<BlogLayout locale={locale} title={post.title[locale]} description={post.excerpt[locale]} showReadingProgress>
+  <div class="article-toc-mobile"><TableOfContents items={headings} locale={locale} client:load /></div>
+  <PostArticle post={post} locale={locale} />
+  <div slot="rail" class="article-toc-rail"><TableOfContents items={headings} locale={locale} client:load /></div>
+</BlogLayout>
