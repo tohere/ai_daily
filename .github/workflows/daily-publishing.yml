@@ -1,4 +1,4 @@
-name: Daily AI publishing and Cloudflare Pages deploy
+name: Daily AI article generation
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish-and-deploy:
+  publish:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -77,9 +77,3 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT_NAME || 'ai-daily' }}
