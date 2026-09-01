@@ -4,6 +4,9 @@ const LOCALES = ['zh', 'en']
 const MAX_TITLE_LENGTH = 90
 const MAX_EXCERPT_LENGTH = 220
 const MAX_BLOCKS = 40
+const MIN_PARAGRAPHS = 6
+const MIN_ZH_CHARACTERS = 900
+const MIN_EN_WORDS = 450
 
 function fail(path, message) {
   throw new Error('Invalid generated article at ' + path + ': ' + message)
@@ -80,6 +83,36 @@ function validateBlocks(value, path) {
   return blocks
 }
 
+function countLocaleText(content, locale) {
+  return content
+    .map((block) => block.type === 'code' ? block.code : block.text[locale])
+    .join(' ')
+    .trim()
+}
+
+function countEnglishWords(value) {
+  return (value.match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g) ?? []).length
+}
+
+function validateContentLength(content) {
+  for (const locale of LOCALES) {
+    const paragraphs = content[locale].filter((block) => block.type === 'paragraph').length
+    if (paragraphs < MIN_PARAGRAPHS) {
+      fail('content.' + locale, 'must contain at least ' + MIN_PARAGRAPHS + ' paragraph blocks')
+    }
+  }
+
+  const zhCharacters = [...countLocaleText(content.zh, 'zh')].filter((char) => char >= '一' && char <= '鿿').length
+  if (zhCharacters < MIN_ZH_CHARACTERS) {
+    fail('content.zh', 'must contain at least ' + MIN_ZH_CHARACTERS + ' Chinese characters')
+  }
+
+  const enWords = countEnglishWords(countLocaleText(content.en, 'en'))
+  if (enWords < MIN_EN_WORDS) {
+    fail('content.en', 'must contain at least ' + MIN_EN_WORDS + ' English words')
+  }
+}
+
 function calculateReadingTime(content) {
   const text = content.zh.concat(content.en)
     .map((block) => block.type === 'code' ? block.code : block.text.zh + ' ' + block.text.en)
@@ -100,6 +133,7 @@ export function validateGeneratedDraft(draft) {
     zh: validateBlocks(draft.content?.zh, 'content.zh'),
     en: validateBlocks(draft.content?.en, 'content.en'),
   }
+  validateContentLength(content)
   return {
     slug: normalizeSlug(draft.slug, 'hacker-news-article'),
     title,

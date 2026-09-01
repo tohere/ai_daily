@@ -30,24 +30,36 @@ function jsonResponse(payload) {
   return { ok: true, status: 200, json: async () => payload }
 }
 
+const longContent = {
+  zh: [
+    { type: 'heading', text: { zh: '背景', en: 'Background' } },
+    ...Array.from({ length: 6 }, (_, index) => ({
+      type: 'paragraph',
+      text: {
+        zh: ('这是关于人工智能系统的第' + (index + 1) + '段测试内容，介绍背景、技术机制、实际影响、局限性以及后续值得继续观察的问题。').repeat(4),
+        en: ('This paragraph explains the background, technical mechanism, practical impact, limitations, and open questions of the AI system. ').repeat(12),
+      },
+    })),
+  ],
+  en: [
+    { type: 'heading', text: { zh: '背景', en: 'Background' } },
+    ...Array.from({ length: 6 }, (_, index) => ({
+      type: 'paragraph',
+      text: {
+        zh: ('这是关于人工智能系统的第' + (index + 1) + '段测试内容，介绍背景、技术机制、实际影响、局限性以及后续值得继续观察的问题。').repeat(4),
+        en: ('This paragraph explains the background, technical mechanism, practical impact, limitations, and open questions of the AI system. ').repeat(12),
+      },
+    })),
+  ],
+}
+
 const draft = {
   slug: 'useful-story',
   title: { zh: '有用的故事', en: 'A useful story' },
   excerpt: { zh: '这是摘要。', en: 'This is an excerpt.' },
   category: { zh: '技术', en: 'Technology' },
   tags: { zh: ['技术', '测试'], en: ['Technology', 'Testing'] },
-  content: {
-    zh: [
-      { type: 'heading', text: { zh: '背景', en: 'Background' } },
-      { type: 'paragraph', text: { zh: '中文内容。', en: 'Chinese content.' } },
-      { type: 'paragraph', text: { zh: '更多中文内容。', en: 'More Chinese content.' } },
-    ],
-    en: [
-      { type: 'heading', text: { zh: '背景', en: 'Background' } },
-      { type: 'paragraph', text: { zh: '中文内容。', en: 'Chinese content.' } },
-      { type: 'paragraph', text: { zh: '更多中文内容。', en: 'More Chinese content.' } },
-    ],
-  },
+  content: longContent,
 }
 
 test('publishDailyArticles generates the requested count and skips published HN ids', async () => {

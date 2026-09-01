@@ -61,7 +61,7 @@ export function buildArticlePrompt(story, sourceText = '') {
     'Return ONLY one valid JSON object. Do not use Markdown fences or commentary before or after the JSON.',
     'Do not copy long passages from the source. Summarize, explain, and add cautious analysis. Never invent facts, numbers, quotes, or capabilities.',
     'Write both Chinese and English versions with equivalent meaning. Every localized string must be non-empty in both languages.',
-    'Use 2 to 4 heading blocks and at least 4 paragraph blocks per language. A quote block is optional. Avoid code blocks unless the source genuinely contains a short code example.',
+    'Use 3 to 5 heading blocks and at least 6 substantial paragraph blocks per language. Structure the article with an introduction, key facts, technical explanation, practical implications, limitations or open questions, and a conclusion. Aim for 1200-1800 Chinese characters and 650-1000 English words per language. If the source is brief, add cautious analysis and context without inventing facts. Do not end early or compress the article into a short summary. A quote block is optional. Avoid code blocks unless the source genuinely contains a short code example.',
     'The first paragraph must not be the disclosure; the application prepends the disclosure deterministically.',
     'Return this exact shape: { title: { zh, en }, excerpt: { zh, en }, category: { zh, en }, tags: { zh: [], en: [] }, slug: string, content: { zh: PostBlock[], en: PostBlock[] } }.',
     'PostBlock is one of { type: heading, text: { zh, en } }, { type: paragraph, text: { zh, en } }, { type: quote, text: { zh, en } }, or { type: code, language, code }. Use localized text for heading, paragraph, and quote.',
