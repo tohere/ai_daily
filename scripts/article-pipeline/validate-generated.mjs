@@ -9,18 +9,29 @@ function fail(path, message) {
   throw new Error('Invalid generated article at ' + path + ': ' + message)
 }
 
-function nonEmptyString(value, path, { maxLength = Number.POSITIVE_INFINITY } = {}) {
+function truncateText(value, maxLength) {
+  if ([...value].length <= maxLength) return value
+  const truncated = [...value].slice(0, maxLength).join('').trimEnd()
+  const lastSpace = truncated.lastIndexOf(' ')
+  if (lastSpace > Math.floor(maxLength * 0.6)) return truncated.slice(0, lastSpace).trimEnd()
+  return truncated
+}
+
+function nonEmptyString(value, path, { maxLength = Number.POSITIVE_INFINITY, truncate = false } = {}) {
   if (typeof value !== 'string' || !value.trim()) fail(path, 'must be a non-empty string')
   const normalized = value.trim()
-  if (normalized.length > maxLength) fail(path, 'must be at most ' + maxLength + ' characters')
+  if ([...normalized].length > maxLength) {
+    if (!truncate) fail(path, 'must be at most ' + maxLength + ' characters')
+    return truncateText(normalized, maxLength)
+  }
   return normalized
 }
 
-function localizedString(value, path, { maxLength = Number.POSITIVE_INFINITY } = {}) {
+function localizedString(value, path, { maxLength = Number.POSITIVE_INFINITY, truncate = false } = {}) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail(path, 'must be an object with zh and en')
   return {
-    zh: nonEmptyString(value.zh, path + '.zh', { maxLength }),
-    en: nonEmptyString(value.en, path + '.en', { maxLength }),
+    zh: nonEmptyString(value.zh, path + '.zh', { maxLength, truncate }),
+    en: nonEmptyString(value.en, path + '.en', { maxLength, truncate }),
   }
 }
 
@@ -80,8 +91,8 @@ function calculateReadingTime(content) {
 
 export function validateGeneratedDraft(draft) {
   if (!draft || typeof draft !== 'object' || Array.isArray(draft)) fail('root', 'must be an object')
-  const title = localizedString(draft.title, 'title', { maxLength: MAX_TITLE_LENGTH })
-  const excerpt = localizedString(draft.excerpt, 'excerpt', { maxLength: MAX_EXCERPT_LENGTH })
+  const title = localizedString(draft.title, 'title', { maxLength: MAX_TITLE_LENGTH, truncate: true })
+  const excerpt = localizedString(draft.excerpt, 'excerpt', { maxLength: MAX_EXCERPT_LENGTH, truncate: true })
   const category = localizedString(draft.category, 'category', { maxLength: 80 })
   const tags = localizedTags(draft.tags, 'tags')
   if (draft.slug !== undefined && typeof draft.slug !== 'string') fail('slug', 'must be a string when provided')

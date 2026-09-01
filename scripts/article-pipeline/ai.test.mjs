@@ -7,6 +7,7 @@ import { loadAiConfig, requestArticleDraft } from './ai.mjs'
 import { generateArticleDocument, writeGeneratedArticle } from './generate-article.mjs'
 import { htmlToPlainText } from './source-context.mjs'
 import { WEEKLY_DAY_AI } from './constants.mjs'
+import { validateGeneratedDraft } from './validate-generated.mjs'
 
 const story = {
   hnId: 12345,
@@ -84,6 +85,20 @@ test('requestArticleDraft sends an OpenAI-compatible request and parses fenced J
   assert.match(body.messages[1].content, /A test story/)
   assert.doesNotMatch(body.messages[1].content, /secret-key/)
   assert.equal(result.slug, draft.slug)
+})
+
+test('validateGeneratedDraft trims oversized titles and excerpts safely', () => {
+  const longExcerpt = 'A detailed summary '.repeat(30)
+  const normalized = validateGeneratedDraft({
+    ...draft,
+    title: { zh: '很长的标题'.repeat(30), en: 'A very long title '.repeat(10) },
+    excerpt: { zh: '这是一段很长的摘要。'.repeat(60), en: longExcerpt },
+  })
+  assert.ok([...normalized.title.zh].length <= 90)
+  assert.ok([...normalized.title.en].length <= 90)
+  assert.ok([...normalized.excerpt.zh].length <= 220)
+  assert.ok([...normalized.excerpt.en].length <= 220)
+  assert.equal(normalized.excerpt.en.length <= 220, true)
 })
 
 test('requestArticleDraft rejects invalid JSON', async () => {

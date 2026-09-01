@@ -65,7 +65,7 @@ export function buildArticlePrompt(story, sourceText = '') {
     'The first paragraph must not be the disclosure; the application prepends the disclosure deterministically.',
     'Return this exact shape: { title: { zh, en }, excerpt: { zh, en }, category: { zh, en }, tags: { zh: [], en: [] }, slug: string, content: { zh: PostBlock[], en: PostBlock[] } }.',
     'PostBlock is one of { type: heading, text: { zh, en } }, { type: paragraph, text: { zh, en } }, { type: quote, text: { zh, en } }, or { type: code, language, code }. Use localized text for heading, paragraph, and quote.',
-    'Use a short lowercase ASCII slug with hyphens. Keep title under 90 characters, excerpt under 220 characters, and tags to 2-5 concise items.',
+    'Use a short lowercase ASCII slug with hyphens. Keep each title under 80 characters, each excerpt under 180 characters, and tags to 2-5 concise items. Never exceed these limits.',
     '',
     'SOURCE CONTEXT:',
     JSON.stringify(context, null, 2),
