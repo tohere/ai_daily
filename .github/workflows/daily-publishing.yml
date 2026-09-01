@@ -16,11 +16,12 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: ai_daily_env
     timeout-minutes: 20
     env:
-      WEEKLY_DAY_AI_BASE_URL: ${{ secrets.WEEKLY_DAY_AI_BASE_URL }}
+      WEEKLY_DAY_AI_BASE_URL: ${{ vars.WEEKLY_DAY_AI_BASE_URL }}
       WEEKLY_DAY_AI_API_KEY: ${{ secrets.WEEKLY_DAY_AI_API_KEY }}
-      WEEKLY_DAY_AI_MODEL: ${{ secrets.WEEKLY_DAY_AI_MODEL }}
+      WEEKLY_DAY_AI_MODEL: ${{ vars.WEEKLY_DAY_AI_MODEL }}
       WEEKLY_DAY_AI_TEMPERATURE: ${{ vars.WEEKLY_DAY_AI_TEMPERATURE || '0.4' }}
       WEEKLY_DAY_AI_MAX_TOKENS: ${{ vars.WEEKLY_DAY_AI_MAX_TOKENS || '5000' }}
       WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS: ${{ vars.WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS || '90000' }}
