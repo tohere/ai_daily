@@ -16,6 +16,7 @@ concurrency:
 jobs:
   publish-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       WEEKLY_DAY_AI_BASE_URL: ${{ secrets.WEEKLY_DAY_AI_BASE_URL }}
       WEEKLY_DAY_AI_API_KEY: ${{ secrets.WEEKLY_DAY_AI_API_KEY }}
@@ -55,6 +56,12 @@ jobs:
       - name: Generate two bilingual Hacker News articles
         run: pnpm content:ai:publish
 
+      - name: Run content tests
+        run: pnpm test:content
+
+      - name: Build Astro site
+        run: pnpm build
+
       - name: Commit generated articles
         id: commit-articles
         run: |
@@ -69,12 +76,6 @@ jobs:
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Run content tests
-        run: pnpm test:content
-
-      - name: Build Astro site
-        run: pnpm build
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
