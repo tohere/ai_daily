@@ -91,3 +91,7 @@ pnpm content:ai:publish
 - 只有内容测试和 Astro 构建成功后，工作流才会提交生成文章。
 - 工作流使用并发锁，避免同一时间运行多个每日发布任务。
 - 如果 AI 或 Cloudflare Secrets 未配置，手动运行会明确失败，不会生成可提交的半成品。
+
+## 持续集成
+
+`.github/workflows/ci.yml` 会在针对 `master` 的 Pull Request 中运行内容测试和 Astro 构建，避免未通过验证的修改进入发布分支。
