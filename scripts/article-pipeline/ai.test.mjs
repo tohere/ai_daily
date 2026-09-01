@@ -127,6 +127,32 @@ test('validateGeneratedDraft normalizes localized text content into blocks', () 
   assert.ok(normalized.content.en.filter((block) => block.type === 'paragraph').length >= 6)
 })
 
+test('validateGeneratedDraft normalizes object-shaped localized content', () => {
+  const normalized = validateGeneratedDraft({
+    ...draft,
+    content: {
+      zh: {
+        introduction: '人工智能文章引言，说明背景和问题。'.repeat(35),
+        facts: '人工智能文章关键信息，区分事实与推测。'.repeat(35),
+        technical: '人工智能文章技术解释，说明工作方式。'.repeat(35),
+        impact: '人工智能文章实际影响，讨论用户和产品。'.repeat(35),
+        limits: '人工智能文章局限性，列出仍待验证的问题。'.repeat(35),
+        conclusion: '人工智能文章结论，归纳可以继续观察的方向。'.repeat(35),
+      },
+      en: {
+        introduction: 'This introduction explains the background and the central question. '.repeat(30),
+        facts: 'This section separates reported facts from cautious interpretation. '.repeat(30),
+        technical: 'This section explains the technical mechanism and its practical meaning. '.repeat(30),
+        impact: 'This section discusses the implications for users, teams, and products. '.repeat(30),
+        limits: 'This section lists limitations and questions that still require verification. '.repeat(30),
+        conclusion: 'This conclusion summarizes the main points and future directions. '.repeat(30),
+      },
+    },
+  })
+  assert.ok(Array.isArray(normalized.content.en))
+  assert.equal(normalized.content.en.filter((block) => block.type === 'paragraph').length, 6)
+})
+
 test('requestArticleDraft rejects invalid JSON', async () => {
   const config = loadAiConfig(configEnv)
   await assert.rejects(

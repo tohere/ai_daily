@@ -93,6 +93,7 @@ function textFromBlock(block, locale) {
   if (typeof block.content === 'string') return block.content.trim()
   if (typeof block.heading === 'string') return block.heading.trim()
   if (typeof block.paragraph === 'string') return block.paragraph.trim()
+  if (typeof block.code === 'string') return block.code.trim()
   return ''
 }
 
@@ -137,7 +138,42 @@ function markdownToBlocks(value, fallbackTitle) {
   return blocks
 }
 
-function coerceContentBlocks(value, fallbackTitle) {
+function objectToBlocks(value, fallbackTitle, locale) {
+  const blocks = []
+  if (typeof value.title === 'string' && value.title.trim()) {
+    blocks.push({ type: 'heading', text: value.title.trim() })
+  } else if (fallbackTitle) {
+    blocks.push({ type: 'heading', text: fallbackTitle })
+  }
+
+  for (const [key, item] of Object.entries(value)) {
+    if (['title', 'locale', 'language'].includes(key)) continue
+    if (typeof item === 'string' && item.trim()) {
+      if (key === 'content' || key === 'text' || key === 'body' || key === 'paragraph') {
+        blocks.push(...markdownToBlocks(item, ''))
+      } else {
+        blocks.push({ type: 'heading', text: key })
+        blocks.push({ type: 'paragraph', text: item.trim() })
+      }
+      continue
+    }
+    if (Array.isArray(item)) {
+      blocks.push({ type: 'heading', text: key })
+      blocks.push(...item)
+      continue
+    }
+    if (item && typeof item === 'object') {
+      const nested = coerceContentBlocks(item, key, locale)
+      if (Array.isArray(nested)) {
+        blocks.push({ type: 'heading', text: key })
+        blocks.push(...nested)
+      }
+    }
+  }
+  return blocks
+}
+
+function coerceContentBlocks(value, fallbackTitle, locale) {
   if (Array.isArray(value)) return value
   if (typeof value === 'string') {
     const text = value.trim()
@@ -153,22 +189,25 @@ function coerceContentBlocks(value, fallbackTitle) {
     return markdownToBlocks(text, fallbackTitle)
   }
   if (value && typeof value === 'object') {
+    if (Array.isArray(value[locale])) return coerceContentBlocks(value[locale], fallbackTitle, locale)
+    if (value.type || typeof value.text === 'string' || typeof value.content === 'string') {
+      return [value]
+    }
     for (const key of ['blocks', 'sections', 'paragraphs']) {
       if (Array.isArray(value[key])) {
         const blocks = value[key]
         return value.title ? [{ type: 'heading', text: value.title }, ...blocks] : blocks
       }
     }
-    if (typeof value.content === 'string') return markdownToBlocks(value.content, fallbackTitle)
-    if (typeof value.text === 'string') return markdownToBlocks(value.text, fallbackTitle)
+    return objectToBlocks(value, fallbackTitle, locale)
   }
   return value
 }
 
 function normalizeContent(draftContent, title) {
   const raw = draftContent && typeof draftContent === 'object' && !Array.isArray(draftContent) ? draftContent : {}
-  const zh = coerceContentBlocks(raw.zh, title.zh)
-  const en = coerceContentBlocks(raw.en, title.en)
+  const zh = coerceContentBlocks(raw.zh, title.zh, 'zh')
+  const en = coerceContentBlocks(raw.en, title.en, 'en')
   if (isNativeBlockArray(raw.zh) && isNativeBlockArray(raw.en)) return { zh, en }
   if (!Array.isArray(zh) || !Array.isArray(en)) return { zh, en }
 
