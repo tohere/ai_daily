@@ -175,6 +175,12 @@ git diff --check
 
 构建成功后，`dist/` 中会包含所有中文、英文和文章静态页面，可部署到任意静态站点托管服务。
 
+生产构建还会生成：
+
+- `/sitemap.xml`：包含中文、英文页面和所有文章详情页。
+- `/robots.txt`：允许搜索引擎抓取，并声明站点地图地址。
+- 页面级 Canonical、Open Graph 和 Twitter Card 元数据，正式域名为 [https://www.weekly-day.top/](https://www.weekly-day.top/)。
+
 ## 自动发布
 
 Hacker News 抓取、星期天AI双语文章生成、GitHub Actions 定时任务和 Cloudflare Pages 部署方案见：
