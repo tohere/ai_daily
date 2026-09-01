@@ -13,7 +13,7 @@ const isZh = locale === 'zh';
   <section class="page-intro" aria-labelledby="about-title">
     <p class="section-eyebrow">About</p>
     <h1 id="about-title" class="page-intro__title">{isZh ? '关于这个自动化博客' : 'About this automated blog'}</h1>
-    <p class="page-intro__description">{isZh ? <>AI Daily 是一个从 Hacker News 自动采集内容，并使用<a href="https://www.weekly-day.top/" target="_blank" rel="noopener noreferrer">星期天AI</a>大模型生成中英文文章的博客。</> : <>AI Daily automatically collects stories from Hacker News and uses the <a href="https://www.weekly-day.top/" target="_blank" rel="noopener noreferrer">Weekly Day AI</a> model to generate bilingual articles.</>}</p>
+    <p class="page-intro__description">{isZh ? <>AI Daily 是一个从 Hacker News 自动采集内容，并使用<a class="ai-provider-link" href="https://www.weekly-day.top/" target="_blank" rel="noopener noreferrer"><strong>星期天AI</strong></a>大模型生成中英文文章的博客。</> : <>AI Daily automatically collects stories from Hacker News and uses the <a class="ai-provider-link" href="https://www.weekly-day.top/" target="_blank" rel="noopener noreferrer"><strong>Weekly Day AI</strong></a> model to generate bilingual articles.</>}</p>
   </section>
   <div class="prose-page">
     <p>{isZh ? '本站不以个人原创写作为主，而是通过自动化流程筛选 Hacker News 热门文章，整理原文信息，并生成中文与英文解读。' : 'This site is not primarily a personal writing blog. It automatically selects notable Hacker News stories, processes the source information, and generates Chinese and English explainers.'}</p>
