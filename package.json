@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "content:hn:preview": "node scripts/article-pipeline/preview-hn.mjs",
-    "test:content": "node --test scripts/article-pipeline/*.test.mjs"
+    "test:content": "node --test scripts/article-pipeline/*.test.mjs",
+    "content:ai:dry-run": "node scripts/article-pipeline/dry-run-ai.mjs"
   },
   "dependencies": {
     "@astrojs/vue": "^7.0.2",
