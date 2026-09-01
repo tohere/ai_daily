@@ -12,6 +12,7 @@ const { locale, title = locale === 'zh' ? 'AI Daily · 记录智能时代' : 'AI
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
 ---
 
 <!doctype html>
@@ -38,6 +39,14 @@ const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AI Daily" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:locale" content={isZh ? 'zh_CN' : 'en_US'} />
+    <meta name="twitter:card" content="summary" />
   </head>
   <body>
     {showReadingProgress && <ReadingProgress client:load />}
