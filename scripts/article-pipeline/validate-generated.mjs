@@ -83,6 +83,123 @@ function validateBlocks(value, path) {
   return blocks
 }
 
+function textFromBlock(block, locale) {
+  if (typeof block === 'string') return block.trim()
+  if (!block || typeof block !== 'object') return ''
+  if (typeof block.text === 'string') return block.text.trim()
+  if (block.text && typeof block.text === 'object') {
+    return String(block.text[locale] ?? block.text.zh ?? block.text.en ?? '').trim()
+  }
+  if (typeof block.content === 'string') return block.content.trim()
+  if (typeof block.heading === 'string') return block.heading.trim()
+  if (typeof block.paragraph === 'string') return block.paragraph.trim()
+  return ''
+}
+
+function typeFromBlock(block) {
+  if (block?.type === 'heading' || block?.type === 'quote' || block?.type === 'code') return block.type
+  if (typeof block?.heading === 'string') return 'heading'
+  return 'paragraph'
+}
+
+function isNativeBlockArray(value) {
+  return Array.isArray(value) && value.every((block) => {
+    if (!block || typeof block !== 'object' || Array.isArray(block)) return false
+    if (block.type === 'code') return typeof block.language === 'string' && typeof block.code === 'string'
+    return (block.type === 'heading' || block.type === 'paragraph' || block.type === 'quote')
+      && block.text && typeof block.text === 'object' && !Array.isArray(block.text)
+  })
+}
+
+function markdownToBlocks(value, fallbackTitle) {
+  const text = value.trim()
+  if (!text) return []
+  let chunks = text.split(/\r?\n\s*\r?\n+/).map((chunk) => chunk.trim()).filter(Boolean)
+  if (chunks.length === 1 && text.includes('\n')) {
+    chunks = text.split(/\r?\n/).map((chunk) => chunk.trim()).filter(Boolean)
+  }
+
+  const blocks = []
+  for (const chunk of chunks) {
+    const lines = chunk.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+    const headingMatch = lines[0]?.match(/^#{1,6}\s+(.+)$/)
+    if (headingMatch) {
+      blocks.push({ type: 'heading', text: headingMatch[1].trim() })
+      const paragraph = lines.slice(1).join(' ').trim()
+      if (paragraph) blocks.push({ type: 'paragraph', text: paragraph })
+    } else {
+      blocks.push({ type: 'paragraph', text: lines.join(' ').trim() })
+    }
+  }
+  if (!blocks.some((block) => block.type === 'heading') && fallbackTitle) {
+    blocks.unshift({ type: 'heading', text: fallbackTitle })
+  }
+  return blocks
+}
+
+function coerceContentBlocks(value, fallbackTitle) {
+  if (Array.isArray(value)) return value
+  if (typeof value === 'string') {
+    const text = value.trim()
+    if (!text) return []
+    if (text.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(text)
+        if (Array.isArray(parsed)) return parsed
+      } catch {
+        // Treat the value as Markdown/plain text when it is not a JSON array.
+      }
+    }
+    return markdownToBlocks(text, fallbackTitle)
+  }
+  if (value && typeof value === 'object') {
+    for (const key of ['blocks', 'sections', 'paragraphs']) {
+      if (Array.isArray(value[key])) {
+        const blocks = value[key]
+        return value.title ? [{ type: 'heading', text: value.title }, ...blocks] : blocks
+      }
+    }
+    if (typeof value.content === 'string') return markdownToBlocks(value.content, fallbackTitle)
+    if (typeof value.text === 'string') return markdownToBlocks(value.text, fallbackTitle)
+  }
+  return value
+}
+
+function normalizeContent(draftContent, title) {
+  const raw = draftContent && typeof draftContent === 'object' && !Array.isArray(draftContent) ? draftContent : {}
+  const zh = coerceContentBlocks(raw.zh, title.zh)
+  const en = coerceContentBlocks(raw.en, title.en)
+  if (isNativeBlockArray(raw.zh) && isNativeBlockArray(raw.en)) return { zh, en }
+  if (!Array.isArray(zh) || !Array.isArray(en)) return { zh, en }
+
+  const length = Math.max(zh.length, en.length)
+  const paired = Array.from({ length }, (_, index) => {
+    const zhBlock = zh[index] ?? en[index]
+    const enBlock = en[index] ?? zh[index]
+    const zhType = typeFromBlock(zhBlock)
+    const enType = typeFromBlock(enBlock)
+    if (zhType === 'code' || enType === 'code') {
+      const codeBlock = zhType === 'code' ? zhBlock : enBlock
+      return {
+        type: 'code',
+        language: typeof codeBlock.language === 'string' && codeBlock.language.trim() ? codeBlock.language : 'text',
+        code: typeof codeBlock.code === 'string' ? codeBlock.code : textFromBlock(codeBlock, 'en'),
+      }
+    }
+    const type = zhType === 'heading' || enType === 'heading'
+      ? 'heading'
+      : zhType === 'quote' || enType === 'quote' ? 'quote' : 'paragraph'
+    return {
+      type,
+      text: {
+        zh: textFromBlock(zhBlock, 'zh'),
+        en: textFromBlock(enBlock, 'en'),
+      },
+    }
+  })
+  return { zh: paired, en: paired }
+}
+
 function countLocaleText(content, locale) {
   return content
     .map((block) => block.type === 'code' ? block.code : block.text[locale])
@@ -129,9 +246,10 @@ export function validateGeneratedDraft(draft) {
   const category = localizedString(draft.category, 'category', { maxLength: 80 })
   const tags = localizedTags(draft.tags, 'tags')
   if (draft.slug !== undefined && typeof draft.slug !== 'string') fail('slug', 'must be a string when provided')
+  const normalizedContent = normalizeContent(draft.content, title)
   const content = {
-    zh: validateBlocks(draft.content?.zh, 'content.zh'),
-    en: validateBlocks(draft.content?.en, 'content.en'),
+    zh: validateBlocks(normalizedContent.zh, 'content.zh'),
+    en: validateBlocks(normalizedContent.en, 'content.en'),
   }
   validateContentLength(content)
   return {

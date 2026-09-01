@@ -113,6 +113,20 @@ test('validateGeneratedDraft trims oversized titles and excerpts safely', () => 
   assert.equal(normalized.excerpt.en.length <= 220, true)
 })
 
+test('validateGeneratedDraft normalizes localized text content into blocks', () => {
+  const normalized = validateGeneratedDraft({
+    ...draft,
+    content: {
+      zh: Array.from({ length: 6 }, (_, index) => '第' + (index + 1) + '段人工智能分析内容，介绍背景、技术机制、实际影响、局限性和未来问题。'.repeat(8)).join('\n\n'),
+      en: Array.from({ length: 6 }, (_, index) => 'Paragraph ' + (index + 1) + ' explains the background, technical mechanism, practical impact, limitations, and open questions for this AI story. '.repeat(18)).join('\n\n'),
+    },
+  })
+  assert.ok(Array.isArray(normalized.content.zh))
+  assert.ok(Array.isArray(normalized.content.en))
+  assert.ok(normalized.content.zh.filter((block) => block.type === 'paragraph').length >= 6)
+  assert.ok(normalized.content.en.filter((block) => block.type === 'paragraph').length >= 6)
+})
+
 test('requestArticleDraft rejects invalid JSON', async () => {
   const config = loadAiConfig(configEnv)
   await assert.rejects(
