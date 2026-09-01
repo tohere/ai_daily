@@ -9,14 +9,14 @@ const basePath = isZh ? '/zh' : '/en';
 ---
 
 <section class="intro-card" aria-labelledby="home-title">
-  <p class="intro-card__eyebrow">AI Daily / 01</p>
-  <h1 id="home-title" class="intro-card__title">{isZh ? '记录智能时代，也记录自己的思考。' : 'Notes for the intelligent age, and for the mind behind it.'}</h1>
-  <p class="intro-card__description">{isZh ? '这里会分享人工智能、产品设计、效率工具，以及那些值得慢下来观察的变化。' : 'Writing about artificial intelligence, product craft, productivity tools, and changes worth observing slowly.'}</p>
+  <p class="intro-card__eyebrow">AI Daily / AUTOMATED</p>
+  <h1 id="home-title" class="intro-card__title">{isZh ? '用 AI 自动生成文章，持续追踪 Hacker News 的技术与产品动态。' : 'AI-generated articles tracking technology and product stories from Hacker News.'}</h1>
+  <p class="intro-card__description">{isZh ? '本站自动筛选 Hacker News 内容，并使用 AI 生成关于人工智能、产品和效率工具的中英文文章。' : 'The site automatically selects Hacker News stories and uses AI to generate bilingual articles about AI, products, and productivity tools.'}</p>
 </section>
 
 <section class="content-section" aria-labelledby="latest-title">
   <div class="section-heading">
-    <div><p class="section-eyebrow">Writing</p><h2 id="latest-title" class="section-heading__title">{isZh ? '最近更新' : 'Latest notes'}</h2></div>
+    <div><p class="section-eyebrow">AI GENERATED</p><h2 id="latest-title" class="section-heading__title">{isZh ? '最近更新' : 'Latest notes'}</h2></div>
     <a class="section-heading__link" href={basePath + '/archives/'}>{isZh ? '查看归档 →' : 'View archives →'}</a>
   </div>
   <PostList posts={posts} locale={locale} />

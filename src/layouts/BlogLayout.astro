@@ -8,7 +8,7 @@ import '../styles/global.css';
 
 type Locale = 'zh' | 'en';
 interface Props { locale: Locale; title?: string; description?: string; showReadingProgress?: boolean; }
-const { locale, title = locale === 'zh' ? 'AI Daily · 记录智能时代' : 'AI Daily · Notes for the intelligent age', description = locale === 'zh' ? '记录人工智能、产品设计与持续学习。' : 'Notes on artificial intelligence, product craft, and continuous learning.', showReadingProgress = false } = Astro.props;
+const { locale, title = locale === 'zh' ? 'AI Daily · AI 自动生成 Hacker News 文章' : 'AI Daily · AI-generated Hacker News articles', description = locale === 'zh' ? '使用 AI 自动生成关于人工智能、产品和 Hacker News 的双语文章。' : 'AI-generated bilingual articles about artificial intelligence, products, and Hacker News.', showReadingProgress = false } = Astro.props;
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
@@ -58,12 +58,12 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toStri
         <main id="main-content" class="main-content" tabindex="-1"><slot /></main>
         <aside class="right-rail" aria-label={isZh ? '补充导航' : 'Complementary navigation'}>
           <slot name="rail">
-            <section class="rail-card"><h2 class="rail-card__title">{isZh ? '现在正在做什么' : 'Now'}</h2><p class="rail-card__text">{isZh ? '整理一套更适合长期写作与阅读的数字花园。' : 'Building a calmer digital garden for long-form writing and reading.'}</p></section>
+            <section class="rail-card"><h2 class="rail-card__title">{isZh ? '自动发布' : 'Automated publishing'}</h2><p class="rail-card__text">{isZh ? '每天从 Hacker News 筛选内容，并使用 AI 自动生成两篇中英文文章。' : 'Selecting stories from Hacker News and generating two bilingual AI articles every day.'}</p></section>
             <section class="rail-card"><h2 class="rail-card__title">{isZh ? '快速入口' : 'Explore'}</h2><ul class="rail-card__list"><li><a href={basePath + '/archives/'}>{isZh ? '浏览全部文章' : 'Browse all posts'}</a></li><li><a href={basePath + '/categories/'}>{isZh ? '按分类查看' : 'Browse by category'}</a></li><li><a href={basePath + '/tags/'}>{isZh ? '按标签查看' : 'Browse by tag'}</a></li></ul></section>
           </slot>
         </aside>
       </div>
-      <footer class="page-footer">© {new Date().getFullYear()} AI Daily · {isZh ? '用好奇心记录变化' : 'Documenting change with curiosity'}</footer>
+      <footer class="page-footer">© {new Date().getFullYear()} AI Daily · {isZh ? 'AI 自动生成 Hacker News 双语文章' : 'AI-generated bilingual articles from Hacker News'}</footer>
     </div>
     <BackToTop locale={locale} client:load />
   </body>

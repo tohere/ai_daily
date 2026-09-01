@@ -5,8 +5,8 @@ type Locale = 'zh' | 'en'
 const props = defineProps<{ locale: Locale }>()
 const basePath = computed(() => (props.locale === 'zh' ? '/zh' : '/en'))
 const copy = computed(() => props.locale === 'zh'
-  ? { profile: '关于作者', profileText: '一个记录 AI、产品与独立思考的数字花园。', categories: '分类', categoryItems: ['人工智能', '产品设计', '效率工具'], tags: '常用标签', tagItems: ['AI', 'Vue', 'Astro', '阅读'] }
-  : { profile: 'About the author', profileText: 'A digital garden for AI, product craft, and independent thinking.', categories: 'Categories', categoryItems: ['Artificial Intelligence', 'Product Design', 'Productivity'], tags: 'Popular tags', tagItems: ['AI', 'Vue', 'Astro', 'Reading'] })
+  ? { profile: '关于本站', profileText: '一个由 AI 自动生成 Hacker News 双语文章的资讯博客。', categories: '分类', categoryItems: ['人工智能', '产品设计', '效率工具'], tags: '常用标签', tagItems: ['AI', 'Vue', 'Astro', '阅读'] }
+  : { profile: 'About this site', profileText: 'A bilingual news blog that uses AI to generate articles from Hacker News.', categories: 'Categories', categoryItems: ['Artificial Intelligence', 'Product Design', 'Productivity'], tags: 'Popular tags', tagItems: ['AI', 'Vue', 'Astro', 'Reading'] })
 </script>
 
 <template>

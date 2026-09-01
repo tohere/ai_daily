@@ -39,7 +39,7 @@ onBeforeUnmount(() => {
   <header ref="headerElement" class="site-header">
     <a class="brand" :href="`${basePath}/`" @click="closeMenu">
       <span class="brand-mark" aria-hidden="true">A</span>
-      <span class="brand-copy"><strong translate="no">AI Daily</strong><small>{{ props.locale === 'zh' ? '记录智能时代' : 'Notes for the intelligent age' }}</small></span>
+      <span class="brand-copy"><strong translate="no">AI Daily</strong><small>{{ props.locale === 'zh' ? 'AI 自动生成 Hacker News 文章' : 'AI-generated Hacker News articles' }}</small></span>
     </a>
     <div class="header-actions">
       <nav id="site-navigation" class="site-nav" :class="{ 'is-open': isMenuOpen }" :aria-label="props.locale === 'zh' ? '主导航' : 'Main navigation'">
