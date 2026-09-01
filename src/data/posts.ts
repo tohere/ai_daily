@@ -1,4 +1,29 @@
+import { generatedPosts } from './generated-posts'
+
 export type Locale = 'zh' | 'en'
+
+export interface PostSource {
+  hnId: number
+  hnUrl: string
+  originalUrl: string
+  title: string
+  author: string
+  score: number
+  commentCount: number
+  publishedAt: string
+}
+
+export interface PostGeneration {
+  provider: string
+  providerUrl: string
+  model: string
+  generatedAt: string
+}
+
+export interface PostDisclosure {
+  zh: string
+  en: string
+}
 
 export type PostBlock =
   | { type: 'heading'; text: Record<Locale, string> }
@@ -15,6 +40,10 @@ export interface Post {
   title: Record<Locale, string>
   excerpt: Record<Locale, string>
   content: Record<Locale, PostBlock[]>
+  disclosure?: PostDisclosure
+  source?: PostSource
+  generation?: PostGeneration
+  isGenerated?: boolean
 }
 
 export const posts: Post[] = [
@@ -111,3 +140,5 @@ export const posts: Post[] = [
     },
   },
 ]
+
+export const allPosts: Post[] = [...posts, ...generatedPosts]

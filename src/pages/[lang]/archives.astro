@@ -1,7 +1,7 @@
 ---
 import BlogLayout from '../../layouts/BlogLayout.astro';
 import PostList from '../../components/blog/PostList.astro';
-import { posts } from '../../data/posts';
+import { allPosts } from '../../data';
 import { locales, sortPosts } from '../../utils/blog';
 
 export function getStaticPaths() {
@@ -17,5 +17,5 @@ const isZh = locale === 'zh';
     <h1 id="archives-title" class="page-intro__title">{isZh ? '文章归档' : 'Archives'}</h1>
     <p class="page-intro__description">{isZh ? '按时间回看这里留下的想法与实验。' : 'A timeline of notes, experiments, and ideas left here over time.'}</p>
   </section>
-  <PostList posts={sortPosts(posts)} locale={locale} />
+  <PostList posts={sortPosts(allPosts)} locale={locale} />
 </BlogLayout>

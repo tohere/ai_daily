@@ -8,7 +8,12 @@ const basePath = locale === 'zh' ? '/zh' : '/en';
 ---
 
 <article class="post-preview">
-  <div class="post-preview__meta"><span>{formatDate(post.date, locale)}</span><span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' min' : ' min read'}</span><span>{post.category[locale]}</span></div>
+  <div class="post-preview__meta">
+    <span>{formatDate(post.date, locale)}</span>
+    <span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span>
+    <span>{post.category[locale]}</span>
+    {post.isGenerated && <span class="post-preview__generated-badge">{locale === 'zh' ? 'AI 生成' : 'AI generated'}</span>}
+  </div>
   <h2 class="post-preview__title"><a href={basePath + '/posts/' + post.slug + '/'}>{post.title[locale]}</a></h2>
   <p class="post-preview__excerpt">{post.excerpt[locale]}</p>
   <div class="post-preview__tags">{post.tags[locale].map((tag) => <span class="post-tag">{tag}</span>)}</div>

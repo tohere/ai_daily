@@ -1,4 +1,4 @@
-import { posts } from '../data/posts'
+import { allPosts } from '../data'
 import type { Locale, Post } from '../data/posts'
 
 export interface PostHeading {
@@ -32,7 +32,7 @@ export function sortPosts(items: Post[]): Post[] {
 }
 
 export function findPost(slug: string | undefined): Post | undefined {
-  return posts.find((post) => post.slug === slug)
+  return allPosts.find((post) => post.slug === slug)
 }
 
 export function getPostHeadings(post: Post, locale: Locale): PostHeading[] {
@@ -54,12 +54,12 @@ export function getPostHeadings(post: Post, locale: Locale): PostHeading[] {
 
 export function collectCategories(locale: Locale): Array<{ name: string; count: number }> {
   const counts = new Map<string, number>()
-  for (const post of posts) counts.set(post.category[locale], (counts.get(post.category[locale]) ?? 0) + 1)
+  for (const post of allPosts) counts.set(post.category[locale], (counts.get(post.category[locale]) ?? 0) + 1)
   return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name))
 }
 
 export function collectTags(locale: Locale): Array<{ name: string; count: number }> {
   const counts = new Map<string, number>()
-  for (const post of posts) for (const tag of post.tags[locale]) counts.set(tag, (counts.get(tag) ?? 0) + 1)
+  for (const post of allPosts) for (const tag of post.tags[locale]) counts.set(tag, (counts.get(tag) ?? 0) + 1)
   return [...counts.entries()].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name))
 }
