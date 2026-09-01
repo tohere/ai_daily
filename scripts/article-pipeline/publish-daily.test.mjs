@@ -21,9 +21,9 @@ const env = {
 }
 
 const stories = new Map([
-  [101, { id: 101, type: 'story', url: 'https://example.com/one', title: 'One useful story', by: 'alice', time: 1_756_700_000, score: 100, descendants: 30 }],
-  [102, { id: 102, type: 'story', url: 'https://example.com/two', title: 'Two useful story', by: 'bob', time: 1_756_700_100, score: 120, descendants: 40 }],
-  [103, { id: 103, type: 'story', url: 'https://example.com/three', title: 'Already published story', by: 'carol', time: 1_756_700_200, score: 200, descendants: 80 }],
+  [101, { id: 101, type: 'story', url: 'https://example.com/ai-one', title: 'One useful AI story', by: 'alice', time: 1_756_700_000, score: 100, descendants: 30 }],
+  [102, { id: 102, type: 'story', url: 'https://example.com/llm-two', title: 'Two useful language model stories', by: 'bob', time: 1_756_700_100, score: 120, descendants: 40 }],
+  [103, { id: 103, type: 'story', url: 'https://example.com/openai-three', title: 'Already published OpenAI story', by: 'carol', time: 1_756_700_200, score: 200, descendants: 80 }],
 ])
 
 function jsonResponse(payload) {

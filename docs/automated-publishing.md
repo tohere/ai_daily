@@ -2,42 +2,39 @@
 
 本项目通过 GitHub Actions 每天自动执行以下流程：
 
-1. 从 Hacker News 热门列表中筛选未发布的外部文章。
+1. 从 Hacker News 热门列表中筛选未发布且明确与 AI 相关的外部文章。
 2. 调用星期天AI（Weekly Day AI）兼容 OpenAI 的接口，生成中英文双语文章。
 3. 将文章写入 `src/data/generated-posts/`。
 4. 运行内容测试和 Astro 构建，确认产物可用。
 5. 自动提交生成的 JSON 到仓库。
-6. 使用 Wrangler 将 `dist/` 部署到 Cloudflare Pages。
+6. 将生成文章提交到 GitHub，由 Cloudflare Pages GitHub 集成自动构建和部署。
 
 ## 工作流
 
 - `.github/workflows/daily-publishing.yml`：默认每天北京时间 08:15（UTC 00:15）运行，也可以在 GitHub Actions 页面手动执行；默认每次生成 2 篇文章。
-- `.github/workflows/deploy.yml`：`master` 分支有新的提交时运行，也可以手动执行；只负责测试、构建和部署，不调用 AI 接口。
 
 ## GitHub Secrets
 
-在仓库的 **Settings → Secrets and variables → Actions → Secrets** 中添加：
+在仓库的 **Settings → Environments → ai_daily_env** 中配置：
 
 | 名称 | 说明 |
 | --- | --- |
-| `WEEKLY_DAY_AI_BASE_URL` | 星期天AI兼容接口的基础地址，例如 `https://gateway.example.com/v1`。 |
-| `WEEKLY_DAY_AI_API_KEY` | 星期天AI API Key。 |
-| `WEEKLY_DAY_AI_MODEL` | 要使用的模型名称。 |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID。 |
-| `CLOUDFLARE_API_TOKEN` | 用于 Pages 部署的 Cloudflare API Token，请使用满足部署所需权限的最小权限 Token。 |
+| `WEEKLY_DAY_AI_API_KEY` | **Environment secret**，星期天AI API Key。 |
 
 不要把 API Key 写入代码、文章 JSON、日志或 Git 提交。仓库已经通过 `.gitignore` 忽略 `.env`。
 
 ## GitHub Variables（可选）
 
-在 **Settings → Secrets and variables → Actions → Variables** 中可以覆盖默认值：
+在 `ai_daily_env` 的 **Environment variables** 中可以配置或覆盖默认值；`WEEKLY_DAY_AI_BASE_URL` 和 `WEEKLY_DAY_AI_MODEL` 也应放在这里：
 
 | 名称 | 默认值 |
 | --- | --- |
-| `CLOUDFLARE_PAGES_PROJECT_NAME` | `ai-daily` |
+| `WEEKLY_DAY_AI_BASE_URL` | 例如 `https://www.weekly-day.top/v1` |
+| `WEEKLY_DAY_AI_MODEL` | 例如 `gpt-5.6-luna` |
 | `DAILY_ARTICLE_COUNT` | `2` |
 | `HN_FETCH_LIMIT` | `50` |
 | `HN_MIN_SCORE` | `50` |
+| `HN_AI_KEYWORDS` | 内置 AI 关键词列表 |
 | `HN_MIN_COMMENTS` | `10` |
 | `WEEKLY_DAY_AI_TEMPERATURE` | `0.4` |
 | `WEEKLY_DAY_AI_MAX_TOKENS` | `5000` |
@@ -49,13 +46,11 @@
 
 ## Cloudflare Pages 准备工作
 
-1. 在 Cloudflare Pages 创建项目，项目名称默认使用 `ai-daily`。
-2. 如果项目名称不同，将名称填入 GitHub Variable `CLOUDFLARE_PAGES_PROJECT_NAME`。
-3. 创建 Cloudflare API Token，并保存到 GitHub Secret `CLOUDFLARE_API_TOKEN`。
-4. 将 Account ID 保存到 GitHub Secret `CLOUDFLARE_ACCOUNT_ID`。
-5. 在 Cloudflare Pages 项目中绑定 `https://www.weekly-day.top` 对应的自定义域名。
+1. 在 Cloudflare Pages 中通过 GitHub 集成连接仓库。
+2. 构建命令使用 `pnpm build`，输出目录使用 `dist`。
+3. 在 Cloudflare Pages 项目中绑定 `https://www.weekly-day.top` 对应的自定义域名。
 
-工作流只负责上传静态构建产物，不会自动修改 DNS 或自定义域名配置。
+Cloudflare Pages 负责 GitHub 提交后的构建和部署；GitHub Actions 只负责生成文章、测试、构建并提交 JSON 文件。
 
 ## 本地验证
 

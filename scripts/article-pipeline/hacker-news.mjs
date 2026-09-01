@@ -1,4 +1,4 @@
-import { HN_API_BASE_URL, HN_ITEM_URL_PREFIX } from './constants.mjs'
+import { AI_TOPIC_KEYWORDS, HN_API_BASE_URL, HN_ITEM_URL_PREFIX } from './constants.mjs'
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds))
 
@@ -76,6 +76,21 @@ export function normalizeHackerNewsStory(item) {
   }
 }
 
+function normalizeTopicText(value) {
+  return typeof value === 'string'
+    ? value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
+    : ''
+}
+
+export function isAiRelatedStory(story, keywords = AI_TOPIC_KEYWORDS) {
+  if (!story) return false
+  const text = normalizeTopicText([story.title, story.originalUrl].join(' '))
+  return keywords.some((keyword) => {
+    const normalizedKeyword = normalizeTopicText(keyword)
+    return normalizedKeyword && (' ' + text + ' ').includes(' ' + normalizedKeyword + ' ')
+  })
+}
+
 export function calculateStoryRank(story, now = new Date()) {
   const ageHours = Math.max(0, (now.getTime() - Date.parse(story.publishedAt)) / 3_600_000)
   const freshnessBonus = Math.max(0, 72 - ageHours) * 2
@@ -111,6 +126,7 @@ export async function selectHackerNewsStories({
   fetchImpl = globalThis.fetch,
   now = new Date(),
   onWarning = console.warn,
+  aiKeywords = AI_TOPIC_KEYWORDS,
 } = {}) {
   const ids = await fetchTopStoryIds({ fetchImpl, limit: fetchLimit, retries: requestRetries, timeoutMs: requestTimeoutMs })
   let fetchFailures = 0
@@ -126,7 +142,8 @@ export async function selectHackerNewsStories({
   })
 
   const normalized = items.map(normalizeHackerNewsStory).filter(Boolean)
-  const eligible = normalized
+  const topicMatched = normalized.filter((story) => isAiRelatedStory(story, aiKeywords))
+  const eligible = topicMatched
     .filter((story) => story.score >= minScore)
     .filter((story) => story.commentCount >= minComments)
     .filter((story) => !publishedHnIds.has(story.hnId))
@@ -144,6 +161,7 @@ export async function selectHackerNewsStories({
       requested: count,
       topStoryIds: ids.length,
       normalized: normalized.length,
+      topicMatched: topicMatched.length,
       eligible: eligible.length,
       fetchFailures,
       publishedIds: publishedHnIds.size,

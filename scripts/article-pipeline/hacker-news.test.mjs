@@ -4,7 +4,7 @@ import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
 import { loadPublishedHnIds } from './generated-posts.mjs'
-import { fetchJsonWithRetry, normalizeHackerNewsStory, selectHackerNewsStories } from './hacker-news.mjs'
+import { fetchJsonWithRetry, isAiRelatedStory, normalizeHackerNewsStory, selectHackerNewsStories } from './hacker-news.mjs'
 
 function response(json, { ok = true, status = 200 } = {}) {
   return { ok, status, json: async () => json }
@@ -21,6 +21,13 @@ test('normalizeHackerNewsStory accepts external stories and rejects invalid item
   assert.equal(normalizeHackerNewsStory({ id: 103, type: 'comment' }), null)
 })
 
+test('isAiRelatedStory only accepts explicit AI topics', () => {
+  assert.equal(isAiRelatedStory({ title: 'A practical guide to machine learning', originalUrl: 'https://example.com/guide' }), true)
+  assert.equal(isAiRelatedStory({ title: 'A calm weekend project', originalUrl: 'https://openai.com/research/example' }), true)
+  assert.equal(isAiRelatedStory({ title: 'I just chose words carefully', originalUrl: 'https://unsung.aresluna.org/i-just-chose-words-carefully/' }), false)
+  assert.equal(isAiRelatedStory({ title: 'A useful software story', originalUrl: 'https://example.com/post' }), false)
+})
+
 test('fetchJsonWithRetry retries a temporary failure', async () => {
   let attempts = 0
   const fetchImpl = async () => {
@@ -35,10 +42,10 @@ test('fetchJsonWithRetry retries a temporary failure', async () => {
 
 test('selectHackerNewsStories filters thresholds and published ids, then ranks candidates', async () => {
   const items = new Map([
-    [1, { id: 1, type: 'story', url: 'https://one.example/', title: 'One', by: 'a', time: 1_700_000_000, score: 100, descendants: 30 }],
-    [2, { id: 2, type: 'story', url: 'https://two.example/', title: 'Two', by: 'b', time: 1_700_000_100, score: 90, descendants: 50 }],
-    [3, { id: 3, type: 'story', url: 'https://three.example/', title: 'Three', by: 'c', time: 1_700_000_200, score: 200, descendants: 80 }],
-    [4, { id: 4, type: 'story', url: 'https://four.example/', title: 'Four', by: 'd', time: 1_700_000_300, score: 10, descendants: 2 }],
+    [1, { id: 1, type: 'story', url: 'https://one.example/ai', title: 'One AI story', by: 'a', time: 1_700_000_000, score: 100, descendants: 30 }],
+    [2, { id: 2, type: 'story', url: 'https://two.example/llm', title: 'Two language model stories', by: 'b', time: 1_700_000_100, score: 90, descendants: 50 }],
+    [3, { id: 3, type: 'story', url: 'https://three.example/openai', title: 'Three OpenAI stories', by: 'c', time: 1_700_000_200, score: 200, descendants: 80 }],
+    [4, { id: 4, type: 'story', url: 'https://four.example/', title: 'Four unrelated stories', by: 'd', time: 1_700_000_300, score: 10, descendants: 2 }],
   ])
   const fetchImpl = async (url) => {
     if (url.endsWith('/topstories.json')) return response([1, 2, 3, 4])
@@ -51,6 +58,7 @@ test('selectHackerNewsStories filters thresholds and published ids, then ranks c
     publishedHnIds: new Set([3]), now: new Date(1_700_001_000 * 1000), onWarning: () => {},
   })
   assert.deepEqual(result.selected.map((story) => story.hnId), [2, 1])
+  assert.equal(result.stats.topicMatched, 3)
   assert.equal(result.stats.eligible, 2)
   assert.equal(result.stats.publishedIds, 1)
 })

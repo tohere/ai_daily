@@ -1,3 +1,5 @@
+import { AI_TOPIC_KEYWORDS } from './constants.mjs'
+
 function readInteger(env, name, fallback, { min = 0, max = Number.MAX_SAFE_INTEGER } = {}) {
   const raw = env[name]
   if (raw === undefined || raw === '') return fallback
@@ -8,12 +10,22 @@ function readInteger(env, name, fallback, { min = 0, max = Number.MAX_SAFE_INTEG
   return value
 }
 
+function readKeywords(env, name, fallback) {
+  const raw = env[name]
+  if (raw === undefined || raw.trim() === '') return fallback
+
+  const keywords = raw.split(',').map((keyword) => keyword.trim().toLowerCase()).filter(Boolean)
+  if (!keywords.length) throw new Error(name + ' must contain at least one keyword')
+  return Object.freeze([...new Set(keywords)])
+}
+
 export function loadHackerNewsConfig(env = process.env) {
   const dailyArticleCount = readInteger(env, 'DAILY_ARTICLE_COUNT', 2, { min: 1, max: 10 })
   const fetchLimit = readInteger(env, 'HN_FETCH_LIMIT', 50, { min: dailyArticleCount, max: 500 })
 
   return Object.freeze({
     dailyArticleCount,
+    aiKeywords: readKeywords(env, 'HN_AI_KEYWORDS', AI_TOPIC_KEYWORDS),
     fetchLimit,
     minScore: readInteger(env, 'HN_MIN_SCORE', 50, { min: 0, max: 100000 }),
     minComments: readInteger(env, 'HN_MIN_COMMENTS', 10, { min: 0, max: 100000 }),
