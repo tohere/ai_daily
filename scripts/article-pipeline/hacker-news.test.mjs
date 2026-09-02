@@ -40,6 +40,16 @@ test('fetchJsonWithRetry retries a temporary failure', async () => {
   assert.equal(attempts, 2)
 })
 
+test('fetchJsonWithRetry reports request timeouts clearly', async () => {
+  const fetchImpl = async (_url, { signal }) => new Promise((_resolve, reject) => {
+    signal.addEventListener('abort', () => reject(new DOMException('This operation was aborted', 'AbortError')), { once: true })
+  })
+  await assert.rejects(
+    fetchJsonWithRetry('https://example.com/slow.json', { fetchImpl, retries: 0, timeoutMs: 5 }),
+    /Request timed out after 5 ms/,
+  )
+})
+
 test('selectHackerNewsStories filters thresholds and published ids, then ranks candidates', async () => {
   const items = new Map([
     [1, { id: 1, type: 'story', url: 'https://one.example/ai', title: 'One AI story', by: 'a', time: 1_700_000_000, score: 100, descendants: 30 }],

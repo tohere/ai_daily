@@ -31,8 +31,8 @@ export function loadAiConfig(env = process.env) {
     model: requiredString(env, 'WEEKLY_DAY_AI_MODEL'),
     temperature,
     maxTokens: readInteger(env, 'WEEKLY_DAY_AI_MAX_TOKENS', 5000, { min: 500, max: 20000 }),
-    requestTimeoutMs: readInteger(env, 'WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS', 90000, { min: 5000, max: 180000 }),
-    requestRetries: readInteger(env, 'WEEKLY_DAY_AI_REQUEST_RETRIES', 2, { min: 0, max: 6 }),
+    requestTimeoutMs: readInteger(env, 'WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS', 180000, { min: 5000, max: 300000 }),
+    requestRetries: readInteger(env, 'WEEKLY_DAY_AI_REQUEST_RETRIES', 1, { min: 0, max: 6 }),
   })
 }
 

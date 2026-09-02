@@ -17,15 +17,15 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: ai_daily_env
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       WEEKLY_DAY_AI_BASE_URL: ${{ vars.WEEKLY_DAY_AI_BASE_URL }}
       WEEKLY_DAY_AI_API_KEY: ${{ secrets.WEEKLY_DAY_AI_API_KEY }}
       WEEKLY_DAY_AI_MODEL: ${{ vars.WEEKLY_DAY_AI_MODEL }}
       WEEKLY_DAY_AI_TEMPERATURE: ${{ vars.WEEKLY_DAY_AI_TEMPERATURE || '0.4' }}
       WEEKLY_DAY_AI_MAX_TOKENS: ${{ vars.WEEKLY_DAY_AI_MAX_TOKENS || '5000' }}
-      WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS: ${{ vars.WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS || '90000' }}
-      WEEKLY_DAY_AI_REQUEST_RETRIES: ${{ vars.WEEKLY_DAY_AI_REQUEST_RETRIES || '2' }}
+      WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS: ${{ vars.WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS || '180000' }}
+      WEEKLY_DAY_AI_REQUEST_RETRIES: ${{ vars.WEEKLY_DAY_AI_REQUEST_RETRIES || '1' }}
       HN_FETCH_LIMIT: ${{ vars.HN_FETCH_LIMIT || '50' }}
       HN_AI_KEYWORDS: ${{ vars.HN_AI_KEYWORDS || '' }}
       HN_MIN_SCORE: ${{ vars.HN_MIN_SCORE || '50' }}
@@ -54,6 +54,13 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Show article generation settings
+        run: |
+          echo "AI model: $WEEKLY_DAY_AI_MODEL"
+          echo "AI request timeout: $WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS ms"
+          echo "AI request retries: $WEEKLY_DAY_AI_REQUEST_RETRIES"
+          echo "AI max tokens: $WEEKLY_DAY_AI_MAX_TOKENS"
 
       - name: Generate two bilingual Hacker News articles
         run: pnpm content:ai:publish

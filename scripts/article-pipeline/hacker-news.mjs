@@ -23,7 +23,9 @@ export async function fetchJsonWithRetry(url, {
       if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
       return await response.json()
     } catch (error) {
-      lastError = error
+      lastError = error?.name === 'AbortError'
+        ? new Error('Request timed out after ' + timeoutMs + ' ms')
+        : error
       if (attempt === retries) break
       await sleep(retryDelayMs * (2 ** attempt))
     } finally {
