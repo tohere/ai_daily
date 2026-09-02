@@ -108,7 +108,13 @@ function isNativeBlockArray(value) {
     if (!block || typeof block !== 'object' || Array.isArray(block)) return false
     if (block.type === 'code') return typeof block.language === 'string' && typeof block.code === 'string'
     return (block.type === 'heading' || block.type === 'paragraph' || block.type === 'quote')
-      && block.text && typeof block.text === 'object' && !Array.isArray(block.text)
+      && block.text
+      && typeof block.text === 'object'
+      && !Array.isArray(block.text)
+      && typeof block.text.zh === 'string'
+      && block.text.zh.trim()
+      && typeof block.text.en === 'string'
+      && block.text.en.trim()
   })
 }
 

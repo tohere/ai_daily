@@ -127,6 +127,18 @@ test('validateGeneratedDraft normalizes localized text content into blocks', () 
   assert.ok(normalized.content.en.filter((block) => block.type === 'paragraph').length >= 6)
 })
 
+test("validateGeneratedDraft repairs missing English text in a bilingual native block", () => {
+  const brokenContent = {
+    zh: longContent.zh.map((block, index) => index === 1 ? { ...block, text: { ...block.text, en: String() } } : block),
+    en: longContent.en,
+  }
+
+  const normalized = validateGeneratedDraft({ ...draft, content: brokenContent })
+  assert.equal(normalized.content.zh[1].text.en.trim(), longContent.en[1].text.en.trim())
+  assert.equal(normalized.content.en[1].text.en.trim(), longContent.en[1].text.en.trim())
+})
+
+
 test('validateGeneratedDraft normalizes object-shaped localized content', () => {
   const normalized = validateGeneratedDraft({
     ...draft,
