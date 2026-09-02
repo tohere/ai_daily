@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     # 08:15 Asia/Shanghai = 00:15 UTC
-    - cron: '15 0 * * *'
+    - cron: "15 0 * * *"
 
 permissions:
   contents: write
@@ -24,8 +24,8 @@ jobs:
       WEEKLY_DAY_AI_MODEL: ${{ vars.WEEKLY_DAY_AI_MODEL }}
       WEEKLY_DAY_AI_TEMPERATURE: ${{ vars.WEEKLY_DAY_AI_TEMPERATURE || '0.4' }}
       WEEKLY_DAY_AI_MAX_TOKENS: ${{ vars.WEEKLY_DAY_AI_MAX_TOKENS || '5000' }}
-      WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS: ${{ vars.WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS || '180000' }}
-      WEEKLY_DAY_AI_REQUEST_RETRIES: ${{ vars.WEEKLY_DAY_AI_REQUEST_RETRIES || '1' }}
+      WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS: ${{ vars.WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS || '240000' }}
+      WEEKLY_DAY_AI_REQUEST_RETRIES: ${{ vars.WEEKLY_DAY_AI_REQUEST_RETRIES || '3' }}
       HN_FETCH_LIMIT: ${{ vars.HN_FETCH_LIMIT || '50' }}
       HN_AI_KEYWORDS: ${{ vars.HN_AI_KEYWORDS || '' }}
       HN_MIN_SCORE: ${{ vars.HN_MIN_SCORE || '50' }}
@@ -49,7 +49,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22.12.0'
+          node-version: "22.12.0"
           cache: pnpm
 
       - name: Install dependencies
@@ -85,4 +85,3 @@ jobs:
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
-

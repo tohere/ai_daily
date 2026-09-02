@@ -13,7 +13,8 @@
     "content:hn:preview": "node scripts/article-pipeline/preview-hn.mjs",
     "test:content": "node --test scripts/article-pipeline/*.test.mjs",
     "content:ai:dry-run": "node scripts/article-pipeline/dry-run-ai.mjs",
-    "content:ai:publish": "node scripts/article-pipeline/publish-daily.mjs"
+    "content:ai:publish": "node scripts/article-pipeline/publish-daily.mjs",
+    "test:content:ai:publish": "node --env-file=.env scripts/article-pipeline/publish-daily.mjs"
   },
   "dependencies": {
     "@astrojs/vue": "^7.0.2",
