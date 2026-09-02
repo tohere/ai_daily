@@ -1,4 +1,5 @@
-import { fetchJsonWithRetry } from "./hacker-news.mjs";
+const sleep = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 function requiredString(env, name) {
   const value = env[name]?.trim();
@@ -134,6 +135,49 @@ function parseJsonResponse(content) {
   }
 }
 
+function extractDeltaContent(payload) {
+  return payload?.choices?.[0]?.delta?.content ?? "";
+}
+
+async function readStreamingContent(response) {
+  const contentType = response.headers?.get?.("content-type") ?? "";
+  if (!contentType.includes("text/event-stream")) {
+    // Fallback for gateways that ignore stream:true and return plain JSON.
+    const payload = await response.json();
+    if (payload?.error) {
+      throw new Error(
+        "Weekly Day AI API error: " +
+          (payload.error.message ?? JSON.stringify(payload.error)),
+      );
+    }
+    return extractMessageContent(payload);
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let content = "";
+  for await (const chunk of response.body) {
+    buffer += decoder.decode(chunk, { stream: true });
+    let newlineIndex;
+    while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+      const line = buffer.slice(0, newlineIndex).trim();
+      buffer = buffer.slice(newlineIndex + 1);
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      const payload = JSON.parse(data);
+      if (payload.error) {
+        throw new Error(
+          "Weekly Day AI API error: " +
+            (payload.error.message ?? JSON.stringify(payload.error)),
+        );
+      }
+      content += extractDeltaContent(payload);
+    }
+  }
+  return content;
+}
+
 export async function requestArticleDraft(
   story,
   sourceText,
@@ -146,38 +190,52 @@ export async function requestArticleDraft(
     temperature: config.temperature,
     max_tokens: config.maxTokens,
     response_format: { type: "json_object" },
+    stream: true,
     messages: [
       { role: "system", content: "You return schema-compliant JSON only." },
       { role: "user", content: buildArticlePrompt(story, sourceText) },
     ],
   };
 
-  const payload = await fetchJsonWithRetry(config.endpoint, {
-    fetchImpl: (url, options) =>
-      fetchImpl(url, {
-        ...options,
+  let lastError;
+  for (let attempt = 0; attempt <= config.requestRetries; attempt += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(
+      () => controller.abort(),
+      config.requestTimeoutMs,
+    );
+    try {
+      const response = await fetchImpl(config.endpoint, {
         method: "POST",
-        body: JSON.stringify(body),
         headers: {
-          ...options.headers,
+          accept: "text/event-stream, application/json",
           authorization: "Bearer " + config.apiKey,
           "content-type": "application/json",
         },
-      }),
-    retries: config.requestRetries,
-    timeoutMs: config.requestTimeoutMs,
-    retryDelayMs,
-  });
-
-  if (payload?.error) {
-    throw new Error(
-      "Weekly Day AI API error: " +
-        (payload.error.message ?? JSON.stringify(payload.error)),
-    );
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+      if (!response.ok)
+        throw new Error(`HTTP ${response.status} for ${config.endpoint}`);
+      const content = await readStreamingContent(response);
+      if (!content.trim())
+        throw new Error("Weekly Day AI returned an empty message");
+      return parseJsonResponse(content);
+    } catch (error) {
+      lastError =
+        error?.name === "AbortError"
+          ? new Error(
+              "Request timed out after " + config.requestTimeoutMs + " ms",
+            )
+          : error;
+      if (attempt === config.requestRetries) break;
+      await sleep(retryDelayMs * 2 ** attempt);
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
-  const content = extractMessageContent(payload);
-  if (!content.trim())
-    throw new Error("Weekly Day AI returned an empty message");
-  return parseJsonResponse(content);
+  throw new Error(
+    `Failed to stream ${config.endpoint} after ${config.requestRetries + 1} attempt(s): ${lastError?.message ?? lastError}`,
+  );
 }

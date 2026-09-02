@@ -93,10 +93,41 @@ test('requestArticleDraft sends an OpenAI-compatible request and parses fenced J
   assert.equal(requestOptions.headers.authorization, 'Bearer secret-key')
   const body = JSON.parse(requestOptions.body)
   assert.equal(body.model, 'model-x')
+  assert.equal(body.stream, true)
   assert.equal(body.response_format.type, 'json_object')
   assert.match(body.messages[1].content, /A test story/)
   assert.doesNotMatch(body.messages[1].content, /secret-key/)
   assert.equal(result.slug, draft.slug)
+})
+
+test('requestArticleDraft reassembles streamed SSE chunks into JSON', async () => {
+  let requestOptions
+  const json = JSON.stringify(draft)
+  const pieces = [json.slice(0, 24), json.slice(24, 60), json.slice(60)]
+  const events =
+    pieces
+      .map((piece) => 'data: ' + JSON.stringify({ choices: [{ delta: { content: piece } }] }) + '\n\n')
+      .join('') + 'data: [DONE]\n\n'
+  const encoder = new TextEncoder()
+  const fetchImpl = async (url, options) => {
+    requestOptions = options
+    return {
+      ok: true,
+      status: 200,
+      headers: { get: () => 'text/event-stream' },
+      body: new ReadableStream({
+        start(controller) {
+          controller.enqueue(encoder.encode(events))
+          controller.close()
+        },
+      }),
+    }
+  }
+  const config = loadAiConfig(configEnv)
+  const result = await requestArticleDraft(story, '<p>source</p>', { config, fetchImpl, retryDelayMs: 0 })
+  assert.equal(JSON.parse(requestOptions.body).stream, true)
+  assert.equal(result.title.zh, draft.title.zh)
+  assert.equal(result.content.zh.length, draft.content.zh.length)
 })
 
 test('validateGeneratedDraft trims oversized titles and excerpts safely', () => {
