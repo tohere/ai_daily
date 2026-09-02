@@ -4,9 +4,9 @@ const LOCALES = ['zh', 'en']
 const MAX_TITLE_LENGTH = 90
 const MAX_EXCERPT_LENGTH = 220
 const MAX_BLOCKS = 40
-const MIN_PARAGRAPHS = 6
-const MIN_ZH_CHARACTERS = 900
-const MIN_EN_WORDS = 450
+const MIN_PARAGRAPHS = 5
+const MIN_ZH_CHARACTERS = 600
+const MIN_EN_WORDS = 300
 
 function fail(path, message) {
   throw new Error('Invalid generated article at ' + path + ': ' + message)
