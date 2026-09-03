@@ -18,6 +18,10 @@ const weeklyDayAiUrl = 'https://www.weekly-day.top/';
     <div class="post-article__meta">
       <time datetime={post.date}>{formatDate(post.date, locale)}</time>
       <span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span>
+      <span id="busuanzi_container_page_pv" class="post-article__views" style="display:none">
+        <svg class="post-article__views-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+        <span id="busuanzi_value_page_pv"></span>{locale === 'zh' ? ' 次浏览' : ' views'}
+      </span>
       {post.isGenerated && <span class="post-article__generated-badge"><strong>{locale === 'zh' ? 'AI 生成' : 'AI generated'}</strong></span>}
     </div>
     {post.disclosure && (
@@ -60,3 +64,5 @@ const weeklyDayAiUrl = 'https://www.weekly-day.top/';
     <a class="post-article__back post-article__back--footer" href={basePath + '/archives/'}>{locale === 'zh' ? '浏览更多文章 →' : 'Browse more posts →'}</a>
   </footer>
 </article>
+
+<script is:inline async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
