@@ -7,6 +7,9 @@ dist/
 # dependencies
 node_modules/
 
+# wrangler local dev state (miniflare KV data, cache, temp bundles)
+workers/**/.wrangler/
+
 # logs
 npm-debug.log*
 yarn-debug.log*

@@ -1,6 +1,6 @@
 ---
 import type { Locale, Post } from '../../data/posts';
-import { formatDate, getPostHeadings } from '../../utils/blog';
+import { encodePathSegment, formatDate, getPostHeadings } from '../../utils/blog';
 
 interface Props { post: Post; locale: Locale; }
 const { post, locale } = Astro.props;
@@ -18,9 +18,9 @@ const weeklyDayAiUrl = 'https://www.weekly-day.top/';
     <div class="post-article__meta">
       <time datetime={post.date}>{formatDate(post.date, locale)}</time>
       <span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span>
-      <span id="busuanzi_container_page_pv" class="post-article__views" style="display:none">
+      <span class="post-article__views" data-views-page hidden>
         <svg class="post-article__views-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-        <span id="busuanzi_value_page_pv"></span>{locale === 'zh' ? ' 次浏览' : ' views'}
+        <span data-views-value></span>{locale === 'zh' ? ' 次浏览' : ' views'}
       </span>
       {post.isGenerated && <span class="post-article__generated-badge"><strong>{locale === 'zh' ? 'AI 生成' : 'AI generated'}</strong></span>}
     </div>
@@ -60,9 +60,27 @@ const weeklyDayAiUrl = 'https://www.weekly-day.top/';
   </div>
 
   <footer class="post-article__footer">
-    <div class="post-preview__tags">{post.tags[locale].map((tag) => <span class="post-tag">{tag}</span>)}</div>
+    <div class="post-preview__tags">{post.tags[locale].map((tag) => <a class="post-tag" href={`${basePath}/tags/${encodePathSegment(tag)}/`}>{tag}</a>)}</div>
     <a class="post-article__back post-article__back--footer" href={basePath + '/archives/'}>{locale === 'zh' ? '浏览更多文章 →' : 'Browse more posts →'}</a>
   </footer>
 </article>
 
-<script is:inline async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script>
+  // 阅读计数：进入详情页时 +1（同 IP 同文章同天只计一次，由 Worker 去重）
+  const api = import.meta.env.PUBLIC_VIEWS_API_URL;
+  const el = document.querySelector('[data-views-page]');
+  if (api && el) {
+    fetch(`${api}/api/views`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: location.pathname }),
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data || !Number.isFinite(data.views)) return;
+        el.querySelector('[data-views-value]').textContent = data.views;
+        el.hidden = false;
+      })
+      .catch(() => {});
+  }
+</script>

@@ -9,3 +9,24 @@ const { posts, locale } = Astro.props;
 <div class="post-list">
   {posts.map((post) => <PostCard post={post} locale={locale} />)}
 </div>
+
+<script>
+  // 列表页阅读数：一次批量查询填充所有卡片（只读，不计数）
+  const api = import.meta.env.PUBLIC_VIEWS_API_URL;
+  const nodes = [...document.querySelectorAll('[data-views-path]')];
+  if (api && nodes.length) {
+    const paths = [...new Set(nodes.map((n) => n.dataset.viewsPath))];
+    fetch(`${api}/api/views?paths=${encodeURIComponent(paths.join(','))}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.views) return;
+        for (const node of nodes) {
+          const views = data.views[node.dataset.viewsPath];
+          if (!Number.isFinite(views)) continue;
+          node.querySelector('[data-views-value]').textContent = views;
+          node.hidden = false;
+        }
+      })
+      .catch(() => {});
+  }
+</script>

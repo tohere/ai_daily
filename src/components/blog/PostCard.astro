@@ -12,6 +12,10 @@ const basePath = locale === 'zh' ? '/zh' : '/en';
     <span>{formatDate(post.date, locale)}</span>
     <span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span>
     <span><a href={`${basePath}/categories/${encodePathSegment(post.category[locale])}/`}>{post.category[locale]}</a></span>
+    <span class="post-preview__views" data-views-path={`${basePath}/posts/${post.slug}/`} hidden title={locale === 'zh' ? '阅读次数' : 'View count'}>
+      <svg class="post-preview__views-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+      <span data-views-value></span>
+    </span>
     {post.isGenerated && <span class="post-preview__generated-badge"><strong>{locale === 'zh' ? 'AI 生成' : 'AI generated'}</strong></span>}
   </div>
   <h2 class="post-preview__title"><a href={basePath + '/posts/' + post.slug + '/'}>{post.title[locale]}</a></h2>
