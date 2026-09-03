@@ -275,6 +275,11 @@ a:focus-visible,
   color: var(--color-accent);
   font-size: 0.72rem;
   font-weight: 650;
+  text-decoration: none;
+}
+.post-tag:hover {
+  background: var(--color-accent);
+  color: var(--color-surface, #fff);
 }
 .article-toc-mobile {
   display: none;

@@ -1,6 +1,6 @@
 ---
 import type { Locale, Post } from '../../data/posts';
-import { formatDate } from '../../utils/blog';
+import { encodePathSegment, formatDate } from '../../utils/blog';
 
 interface Props { post: Post; locale: Locale; }
 const { post, locale } = Astro.props;
@@ -11,10 +11,10 @@ const basePath = locale === 'zh' ? '/zh' : '/en';
   <div class="post-preview__meta">
     <span>{formatDate(post.date, locale)}</span>
     <span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span>
-    <span>{post.category[locale]}</span>
+    <span><a href={`${basePath}/categories/${encodePathSegment(post.category[locale])}/`}>{post.category[locale]}</a></span>
     {post.isGenerated && <span class="post-preview__generated-badge"><strong>{locale === 'zh' ? 'AI 生成' : 'AI generated'}</strong></span>}
   </div>
   <h2 class="post-preview__title"><a href={basePath + '/posts/' + post.slug + '/'}>{post.title[locale]}</a></h2>
   <p class="post-preview__excerpt">{post.excerpt[locale]}</p>
-  <div class="post-preview__tags">{post.tags[locale].map((tag) => <span class="post-tag">{tag}</span>)}</div>
+  <div class="post-preview__tags">{post.tags[locale].map((tag) => <a class="post-tag" href={`${basePath}/tags/${encodePathSegment(tag)}/`}>{tag}</a>)}</div>
 </article>

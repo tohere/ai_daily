@@ -31,6 +31,11 @@ export function sortPosts(items: Post[]): Post[] {
   return [...items].sort((a, b) => b.date.localeCompare(a.date))
 }
 
+// 路径段编码：encodeURIComponent 后保留字面量 &（路径段中合法，且 Astro dev 无法匹配 %26）
+export function encodePathSegment(value: string): string {
+  return encodeURIComponent(value).replaceAll('%26', '&')
+}
+
 export function findPost(slug: string | undefined): Post | undefined {
   return allPosts.find((post) => post.slug === slug)
 }

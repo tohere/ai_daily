@@ -1,0 +1,24 @@
+---
+import BlogLayout from '../../../layouts/BlogLayout.astro';
+import PostList from '../../../components/blog/PostList.astro';
+import { allPosts } from '../../../data';
+import { collectCategories, locales, sortPosts } from '../../../utils/blog';
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) =>
+    collectCategories(locale).map((category) => ({ params: { lang: locale, category: category.name }, props: { locale, category: category.name } })),
+  );
+}
+
+const { locale, category } = Astro.props;
+const isZh = locale === 'zh';
+const posts = sortPosts(allPosts.filter((post) => post.category[locale] === category));
+---
+<BlogLayout locale={locale} title={`${category} · AI Daily`}>
+  <section class="page-intro" aria-labelledby="category-title">
+    <p class="section-eyebrow">Category</p>
+    <h1 id="category-title" class="page-intro__title">{category}</h1>
+    <p class="page-intro__description">{isZh ? `共 ${posts.length} 篇文章。` : `${posts.length} ${posts.length === 1 ? 'post' : 'posts'} in this category.`}</p>
+  </section>
+  <PostList posts={posts} locale={locale} />
+</BlogLayout>

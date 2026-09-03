@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '../../../layouts/BlogLayout.astro';
-import { collectCategories, locales } from '../../../utils/blog';
+import { collectCategories, encodePathSegment, locales } from '../../../utils/blog';
 
 export function getStaticPaths() {
   return locales.map((locale) => ({ params: { lang: locale }, props: { locale } }));
@@ -13,6 +13,6 @@ const categories = collectCategories(locale);
 <BlogLayout locale={locale} title={isZh ? '分类 · AI Daily' : 'Categories · AI Daily'}>
   <section class="page-intro" aria-labelledby="categories-title"><p class="section-eyebrow">Categories</p><h1 id="categories-title" class="page-intro__title">{isZh ? '分类' : 'Categories'}</h1><p class="page-intro__description">{isZh ? '从不同主题进入文章。' : 'Enter the archive through a set of recurring themes.'}</p></section>
   <div class="taxonomy-grid">
-    {categories.map((category) => <a class="taxonomy-card" href={'/' + locale + '/archives/'}><span class="taxonomy-card__name">{category.name}</span><span class="taxonomy-card__count">{category.count} {isZh ? '篇文章' : category.count === 1 ? 'post' : 'posts'}</span></a>)}
+    {categories.map((category) => <a class="taxonomy-card" href={`/${locale}/categories/${encodePathSegment(category.name)}/`}><span class="taxonomy-card__name">{category.name}</span><span class="taxonomy-card__count">{category.count} {isZh ? '篇文章' : category.count === 1 ? 'post' : 'posts'}</span></a>)}
   </div>
 </BlogLayout>

@@ -1,19 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { encodePathSegment } from '../../utils/blog'
 
 type Locale = 'zh' | 'en'
-const props = defineProps<{ locale: Locale }>()
+interface TaxonomyItem { name: string; count: number }
+const props = defineProps<{ locale: Locale; categories: TaxonomyItem[]; tags: TaxonomyItem[] }>()
 const basePath = computed(() => (props.locale === 'zh' ? '/zh' : '/en'))
 const copy = computed(() => props.locale === 'zh'
-  ? { profile: '关于本站', profileText: '一个由 AI 自动生成 Hacker News 双语文章的资讯博客。', categories: '分类', categoryItems: ['人工智能', '产品设计', '效率工具'], tags: '常用标签', tagItems: ['AI', 'Vue', 'Astro', '阅读'] }
-  : { profile: 'About this site', profileText: 'A bilingual news blog that uses AI to generate articles from Hacker News.', categories: 'Categories', categoryItems: ['Artificial Intelligence', 'Product Design', 'Productivity'], tags: 'Popular tags', tagItems: ['AI', 'Vue', 'Astro', 'Reading'] })
+  ? { profile: '关于本站', profileText: '一个由 AI 自动生成 Hacker News 双语文章的资讯博客。', categories: '分类', tags: '常用标签' }
+  : { profile: 'About this site', profileText: 'A bilingual news blog that uses AI to generate articles from Hacker News.', categories: 'Categories', tags: 'Popular tags' })
+const categoryHref = (name: string) => `${basePath.value}/categories/${encodePathSegment(name)}/`
+const tagHref = (name: string) => `${basePath.value}/tags/${encodePathSegment(name)}/`
 </script>
 
 <template>
   <aside class="left-sidebar" :aria-label="copy.profile">
     <div class="profile-card"><div class="profile-avatar" aria-hidden="true">AI</div><h2 class="profile-name">AI Daily</h2><p class="profile-text">{{ copy.profileText }}</p></div>
-    <section class="sidebar-section"><h3>{{ copy.categories }}</h3><ul><li v-for="item in copy.categoryItems" :key="item"><a :href="`${basePath}/categories/`">{{ item }}</a></li></ul></section>
-    <section class="sidebar-section"><h3>{{ copy.tags }}</h3><div class="tag-list"><a v-for="item in copy.tagItems" :key="item" :href="`${basePath}/tags/`">#{{ item }}</a></div></section>
+    <section class="sidebar-section"><h3>{{ copy.categories }}</h3><ul><li v-for="item in categories" :key="item.name"><a :href="categoryHref(item.name)">{{ item.name }}</a></li></ul></section>
+    <section class="sidebar-section"><h3>{{ copy.tags }}</h3><div class="tag-list"><a v-for="item in tags" :key="item.name" :href="tagHref(item.name)">#{{ item.name }}</a></div></section>
   </aside>
 </template>
 

@@ -3,7 +3,7 @@ import BlogHeader from '../components/layout/BlogHeader.vue';
 import BlogSidebar from '../components/layout/BlogSidebar.vue';
 import BackToTop from '../components/ui/BackToTop.vue';
 import ReadingProgress from '../components/ui/ReadingProgress.vue';
-import { getLocalizedPath } from '../utils/blog';
+import { getLocalizedPath, collectCategories, collectTags } from '../utils/blog';
 import '../styles/global.css';
 
 type Locale = 'zh' | 'en';
@@ -12,6 +12,8 @@ const { locale, title = locale === 'zh' ? 'AI Daily · AI 自动生成 Hacker Ne
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
+const sidebarCategories = collectCategories(locale);
+const sidebarTags = collectTags(locale).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 8);
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
 ---
 
@@ -54,7 +56,7 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toStri
     <div class="site-container">
       <BlogHeader locale={locale} languagePath={languagePath} client:load />
       <div class="page-layout">
-        <BlogSidebar locale={locale} />
+        <BlogSidebar locale={locale} categories={sidebarCategories} tags={sidebarTags} />
         <main id="main-content" class="main-content" tabindex="-1"><slot /></main>
         <aside class="right-rail" aria-label={isZh ? '补充导航' : 'Complementary navigation'}>
           <slot name="rail">
