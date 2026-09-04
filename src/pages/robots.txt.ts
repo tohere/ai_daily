@@ -5,7 +5,7 @@ export function GET(): Response {
     'User-agent: *',
     'Allow: /',
     '',
-    'Sitemap: https://www.weekly-day.top/sitemap.xml',
+    `Sitemap: ${import.meta.env.SITE}/sitemap.xml`,
   ].join('\n') + '\n'
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } })
 }
