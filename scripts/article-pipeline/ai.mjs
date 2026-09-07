@@ -97,7 +97,7 @@ export function buildArticlePrompt(story, sourceText = "") {
     "Return ONLY one valid JSON object. Do not use Markdown fences or commentary before or after the JSON.",
     "Do not copy long passages from the source. Summarize, explain, and add cautious analysis. Never invent facts, numbers, quotes, or capabilities.",
     "Write both Chinese and English versions with equivalent meaning. Every localized string must be non-empty in both languages.",
-    "Use 3 to 5 heading blocks and at least 5 substantial paragraph blocks per language. Structure the article with an introduction, key facts, technical explanation, practical implications, limitations or open questions, and a conclusion. Aim for 700-1100 Chinese characters and 400-600 English words per language. If the source is brief, add cautious analysis and context without inventing facts. Do not end early or compress the article into a short summary. A quote block is optional. Avoid code blocks unless the source genuinely contains a short code example.",
+    "Use 3 to 5 heading blocks and at least 5 substantial paragraph blocks per language. Structure the article with an introduction, key facts, technical explanation, practical implications, limitations or open questions, and a conclusion. Aim for 400-800 Chinese characters and 250-450 English words per language. If the source is brief, add cautious analysis and context without inventing facts. Do not end early or compress the article into a short summary. A quote block is optional. Avoid code blocks unless the source genuinely contains a short code example.",
     "The content.zh and content.en fields MUST be JSON arrays, never strings or objects. Every item must be a separate block with type heading, paragraph, quote, or code; heading, paragraph, and quote items must include text: { zh, en }.",
     "The first paragraph must not be the disclosure; the application prepends the disclosure deterministically.",
     "Return this exact shape: { title: { zh, en }, excerpt: { zh, en }, category: { zh, en }, tags: { zh: [], en: [] }, slug: string, content: { zh: PostBlock[], en: PostBlock[] } }.",
@@ -186,7 +186,7 @@ async function readStreamingContent(response) {
 export async function requestArticleDraft(
   story,
   sourceText,
-  { config, fetchImpl = globalThis.fetch, retryDelayMs = 500 } = {},
+  { config, fetchImpl = globalThis.fetch, retryDelayMs = 15000 } = {},
 ) {
   if (!config) throw new Error("AI config is required");
 
