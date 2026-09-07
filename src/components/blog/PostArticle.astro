@@ -1,6 +1,6 @@
 ---
 import type { Locale, Post } from '../../data/posts';
-import { encodePathSegment, formatDate, getPostHeadings } from '../../utils/blog';
+import { formatDate, getPostHeadings, safeSegment } from '../../utils/blog';
 
 interface Props { post: Post; locale: Locale; }
 const { post, locale } = Astro.props;
@@ -60,7 +60,7 @@ const weeklyDayAiUrl = 'https://www.weekly-day.top/';
   </div>
 
   <footer class="post-article__footer">
-    <div class="post-preview__tags">{post.tags[locale].map((tag) => <a class="post-tag" href={`${basePath}/tags/${encodePathSegment(tag)}/`}>{tag}</a>)}</div>
+    <div class="post-preview__tags">{post.tags[locale].map((tag) => <a class="post-tag" href={`${basePath}/tags/${safeSegment(tag)}/`}>{tag}</a>)}</div>
     <a class="post-article__back post-article__back--footer" href={basePath + '/archives/'}>{locale === 'zh' ? '浏览更多文章 →' : 'Browse more posts →'}</a>
   </footer>
 </article>

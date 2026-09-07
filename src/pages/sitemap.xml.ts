@@ -1,5 +1,5 @@
 import { allPosts } from '../data'
-import { collectCategories, collectTags, encodePathSegment, locales } from '../utils/blog'
+import { collectCategories, collectTags, locales, safeSegment } from '../utils/blog'
 
 export const prerender = true
 
@@ -46,14 +46,14 @@ export function GET(): Response {
       const group = allPosts
         .filter((post) => post.category[locale] === category.name)
         .map((post) => ({ path: '', date: post.date }))
-      entries.push(urlEntry('/' + locale + '/categories/' + encodePathSegment(category.name) + '/', latestDate(group)))
+      entries.push(urlEntry('/' + locale + '/categories/' + safeSegment(category.name) + '/', latestDate(group)))
     }
     // 标签筛选页
     for (const tag of collectTags(locale)) {
       const group = allPosts
         .filter((post) => post.tags[locale].includes(tag.name))
         .map((post) => ({ path: '', date: post.date }))
-      entries.push(urlEntry('/' + locale + '/tags/' + encodePathSegment(tag.name) + '/', latestDate(group)))
+      entries.push(urlEntry('/' + locale + '/tags/' + safeSegment(tag.name) + '/', latestDate(group)))
     }
   }
 

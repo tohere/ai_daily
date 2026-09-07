@@ -36,6 +36,11 @@ export function encodePathSegment(value: string): string {
   return encodeURIComponent(value).replaceAll('%26', '&')
 }
 
+// URL 段净化：斜杠会把动态路由拆成多段（如 AI 生成的标签 "A/I"），先替换为连字符再编码
+export function safeSegment(value: string): string {
+  return encodePathSegment(value.replace(/[/\\]/g, '-'))
+}
+
 export function findPost(slug: string | undefined): Post | undefined {
   return allPosts.find((post) => post.slug === slug)
 }

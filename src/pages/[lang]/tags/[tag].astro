@@ -5,9 +5,14 @@ import { allPosts } from '../../../data';
 import { collectTags, locales, sortPosts } from '../../../utils/blog';
 
 export function getStaticPaths() {
-  return locales.flatMap((locale) =>
-    collectTags(locale).map((tag) => ({ params: { lang: locale, tag: tag.name }, props: { locale, tag: tag.name } })),
-  );
+  return locales.flatMap((locale) => {
+    const used = new Set<string>();
+    return collectTags(locale)
+      // 参数保持原文（Astro 自行编码），仅替换会把路由拆成多段的斜杠（如 AI 生成的标签 "A/I"）
+      .map((tag) => ({ segment: tag.name.replace(/[/\\]/g, '-'), props: { locale, tag: tag.name } }))
+      .filter(({ segment }) => !used.has(segment) && used.add(segment))
+      .map(({ segment, props }) => ({ params: { lang: locale, tag: segment }, props }));
+  });
 }
 
 const { locale, tag } = Astro.props;
