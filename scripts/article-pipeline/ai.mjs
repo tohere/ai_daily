@@ -183,6 +183,22 @@ async function readStreamingContent(response) {
   return content;
 }
 
+// 展开错误的 cause 链（如 undici terminated -> ECONNRESET），方便日志定位
+export function describeError(error) {
+  const parts = [];
+  let current = error;
+  let depth = 0;
+  while (current && depth < 4) {
+    const label =
+      current.name && current.name !== "Error" ? current.name + ": " : "";
+    const code = current.code ? " [" + current.code + "]" : "";
+    parts.push(label + (current.message ?? String(current)) + code);
+    current = current.cause;
+    depth += 1;
+  }
+  return parts.join(" <- ") || String(error);
+}
+
 export async function requestArticleDraft(
   story,
   sourceText,
@@ -209,6 +225,7 @@ export async function requestArticleDraft(
       () => controller.abort(),
       config.requestTimeoutMs,
     );
+    const startedAt = Date.now();
     try {
       const response = await fetchImpl(config.endpoint, {
         method: "POST",
@@ -220,21 +237,33 @@ export async function requestArticleDraft(
         body: JSON.stringify(body),
         signal: controller.signal,
       });
+      console.log(
+        `[ai] attempt ${attempt + 1}/${config.requestRetries + 1} response HTTP ${response.status} after ${Math.round((Date.now() - startedAt) / 1000)}s`,
+      );
       if (!response.ok)
         throw new Error(`HTTP ${response.status} for ${config.endpoint}`);
       const content = await readStreamingContent(response);
       if (!content.trim())
         throw new Error("Weekly Day AI returned an empty message");
+      console.log(
+        `[ai] attempt ${attempt + 1}/${config.requestRetries + 1} completed in ${Math.round((Date.now() - startedAt) / 1000)}s (${content.length} chars)`,
+      );
       return parseJsonResponse(content);
     } catch (error) {
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
       lastError =
         error?.name === "AbortError"
           ? new Error(
               "Request timed out after " + config.requestTimeoutMs + " ms",
             )
           : error;
+      console.warn(
+        `[ai] attempt ${attempt + 1}/${config.requestRetries + 1} FAILED after ${elapsed}s: ${describeError(lastError)}`,
+      );
       if (attempt === config.requestRetries) break;
-      await sleep(retryDelayMs * 2 ** attempt);
+      const delay = retryDelayMs * 2 ** attempt;
+      console.warn(`[ai] retrying in ${Math.round(delay / 1000)}s...`);
+      await sleep(delay);
     } finally {
       clearTimeout(timeout);
     }
