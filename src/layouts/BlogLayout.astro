@@ -7,14 +7,17 @@ import { getLocalizedPath, collectCategories, collectTags } from '../utils/blog'
 import '../styles/global.css';
 
 type Locale = 'zh' | 'en';
-interface Props { locale: Locale; title?: string; description?: string; showReadingProgress?: boolean; }
-const { locale, title = locale === 'zh' ? 'AI Daily · AI 自动生成 Hacker News 文章' : 'AI Daily · AI-generated Hacker News articles', description = locale === 'zh' ? '使用 AI 自动生成关于人工智能、产品和 Hacker News 的双语文章。' : 'AI-generated bilingual articles about artificial intelligence, products, and Hacker News.', showReadingProgress = false } = Astro.props;
+interface Props { locale: Locale; title?: string; description?: string; keywords?: string; showReadingProgress?: boolean; }
+const { locale, title = locale === 'zh' ? 'AI Daily · AI 自动生成 Hacker News 文章' : 'AI Daily · AI-generated Hacker News articles', description = locale === 'zh' ? '使用 AI 自动生成关于人工智能、产品和 Hacker News 的双语文章。' : 'AI-generated bilingual articles about artificial intelligence, products, and Hacker News.', keywords, showReadingProgress = false } = Astro.props;
 const isZh = locale === 'zh';
 const basePath = isZh ? '/zh' : '/en';
 const languagePath = getLocalizedPath(isZh ? 'en' : 'zh', Astro.url.pathname);
 const sidebarCategories = collectCategories(locale);
 const sidebarTags = collectTags(locale).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name)).slice(0, 8);
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString();
+const alternateUrl = new URL(languagePath, Astro.site ?? Astro.url).toString();
+const zhUrl = isZh ? canonicalUrl : alternateUrl;
+const enUrl = isZh ? alternateUrl : canonicalUrl;
 ---
 
 <!doctype html>
@@ -23,6 +26,7 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toStri
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    {keywords && keywords.trim() && <meta name="keywords" content={keywords.trim()} />}
     <meta name="theme-color" content="#f7f9fb" />
     <script is:inline>
       (() => {
@@ -42,6 +46,10 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url).toStri
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang="zh-CN" href={zhUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="x-default" href={zhUrl} />
+    <slot name="head" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="AI Daily" />
     <meta property="og:title" content={title} />

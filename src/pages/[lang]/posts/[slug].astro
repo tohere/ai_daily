@@ -11,8 +11,23 @@ export function getStaticPaths() {
 
 const { locale, post } = Astro.props;
 const headings = getPostHeadings(post, locale);
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.title[locale],
+  description: post.excerpt[locale],
+  datePublished: post.date,
+  dateModified: post.date,
+  inLanguage: locale === 'zh' ? 'zh-CN' : 'en',
+  keywords: post.tags[locale].join(', '),
+  articleSection: post.category[locale],
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site ?? Astro.url).toString(),
+  author: { '@type': 'Organization', name: 'AI Daily' },
+  publisher: { '@type': 'Organization', name: 'AI Daily' },
+};
 ---
-<BlogLayout locale={locale} title={post.title[locale]} description={post.excerpt[locale]} showReadingProgress>
+<BlogLayout locale={locale} title={post.title[locale]} description={post.excerpt[locale]} keywords={post.tags[locale].join(', ')} showReadingProgress>
+  <script is:inline type="application/ld+json" slot="head" set:html={JSON.stringify(jsonLd)} />
   <div class="article-toc-mobile"><TableOfContents items={headings} locale={locale} client:load /></div>
   <PostArticle post={post} locale={locale} />
   <div slot="rail" class="article-toc-rail"><TableOfContents items={headings} locale={locale} client:load /></div>
