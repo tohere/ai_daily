@@ -35,9 +35,9 @@ export function loadAiConfig(env = process.env) {
     /\/+$/,
     "",
   );
-  const endpoint = rawBaseUrl.endsWith("/chat/completions")
+  const endpoint = rawBaseUrl.endsWith("/responses")
     ? rawBaseUrl
-    : rawBaseUrl + "/chat/completions";
+    : rawBaseUrl + "/responses";
   const temperature = Number(env.WEEKLY_DAY_AI_TEMPERATURE ?? 0.4);
   if (!Number.isFinite(temperature) || temperature < 0 || temperature > 2) {
     throw new Error(
@@ -115,11 +115,14 @@ export function buildArticlePrompt(story, sourceText = "") {
 }
 
 function extractMessageContent(payload) {
-  const content = payload?.choices?.[0]?.message?.content;
-  if (typeof content === "string") return content;
-  if (Array.isArray(content)) {
-    return content
-      .filter((part) => part?.type === "text" && typeof part.text === "string")
+  // Responses API：output 数组里的 message 项
+  if (Array.isArray(payload?.output)) {
+    return payload.output
+      .filter((item) => item?.type === "message")
+      .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
+      .filter(
+        (part) => part?.type === "output_text" && typeof part.text === "string",
+      )
       .map((part) => part.text)
       .join("");
   }
@@ -141,7 +144,33 @@ function parseJsonResponse(content) {
 }
 
 function extractDeltaContent(payload) {
-  return payload?.choices?.[0]?.delta?.content ?? "";
+  return payload?.type === "response.output_text.delta"
+    ? typeof payload.delta === "string"
+      ? payload.delta
+      : ""
+    : "";
+}
+
+// 流事件中的失败信号：response.failed / error / response.incomplete
+function responsesStreamError(payload) {
+  if (payload?.type === "response.failed") {
+    const detail = payload.response?.error;
+    return detail?.message
+      ? "Weekly Day AI API error: " + detail.message
+      : "Weekly Day AI API error: response failed";
+  }
+  if (payload?.type === "error") {
+    return (
+      "Weekly Day AI API error: " + (payload.message ?? JSON.stringify(payload))
+    );
+  }
+  if (payload?.type === "response.incomplete") {
+    const reason = payload.response?.incomplete_details?.reason;
+    if (reason) {
+      return "Weekly Day AI response incomplete: " + reason;
+    }
+  }
+  return null;
 }
 
 async function readStreamingContent(response) {
@@ -149,6 +178,8 @@ async function readStreamingContent(response) {
   if (!contentType.includes("text/event-stream")) {
     // Fallback for gateways that ignore stream:true and return plain JSON.
     const payload = await response.json();
+    const streamError = responsesStreamError(payload);
+    if (streamError) throw new Error(streamError);
     if (payload?.error) {
       throw new Error(
         "Weekly Day AI API error: " +
@@ -171,6 +202,8 @@ async function readStreamingContent(response) {
       const data = line.slice(5).trim();
       if (!data || data === "[DONE]") continue;
       const payload = JSON.parse(data);
+      const streamError = responsesStreamError(payload);
+      if (streamError) throw new Error(streamError);
       if (payload.error) {
         throw new Error(
           "Weekly Day AI API error: " +
@@ -209,10 +242,10 @@ export async function requestArticleDraft(
   const body = {
     model: config.model,
     temperature: config.temperature,
-    max_tokens: config.maxTokens,
-    response_format: { type: "json_object" },
+    max_output_tokens: config.maxTokens,
     stream: true,
-    messages: [
+    text: { format: { type: "json_object" } },
+    input: [
       { role: "system", content: "You return schema-compliant JSON only." },
       { role: "user", content: buildArticlePrompt(story, sourceText) },
     ],

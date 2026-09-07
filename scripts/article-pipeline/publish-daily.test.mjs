@@ -70,7 +70,7 @@ test('publishDailyArticles generates the requested count and skips published HN 
     const fetchImpl = async (url) => {
       if (url.endsWith('/topstories.json')) return jsonResponse([101, 102, 103])
       if (url.includes('/item/')) return jsonResponse(stories.get(Number(url.match(/item\/(\d+)\.json$/)?.[1])))
-      if (url.endsWith('/chat/completions')) return jsonResponse({ choices: [{ message: { content: JSON.stringify(draft) } }] })
+      if (url.endsWith('/responses')) return jsonResponse({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(draft) }] }] })
       throw new Error('Unexpected request: ' + url)
     }
     const sourceFetchImpl = async () => ({ ok: true, status: 200, text: async () => '<p>Source article text.</p>' })
