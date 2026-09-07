@@ -3,8 +3,8 @@ name: Daily AI article generation
 on:
   workflow_dispatch:
   schedule:
-    # 08:15 Asia/Shanghai = 00:15 UTC
-    - cron: "0 8 * * *"
+    # 每天北京时间 8:00 发布
+    - cron: "0 0 * * *"
 
 permissions:
   contents: write
