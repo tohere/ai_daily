@@ -3,8 +3,9 @@ import { generatedPosts } from './generated-posts'
 export type Locale = 'zh' | 'en'
 
 export interface PostSource {
-  hnId: number
-  hnUrl: string
+  /** Hacker News 讨论帖 id；指定链接模式生成的文章没有 HN 来源 */
+  hnId?: number | null
+  hnUrl?: string | null
   originalUrl: string
   title: string
   author: string

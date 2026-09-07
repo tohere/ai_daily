@@ -167,10 +167,23 @@ const fetchImpl = async (url, options) => {
   if (url !== config.endpoint)
     throw new Error("Unexpected dry-run URL: " + url);
   const request = JSON.parse(options.body);
-  if (request.model !== config.model || !request.response_format)
+  // 校验 Responses API 请求格式（与 ai.mjs 保持一致）
+  if (
+    request.model !== config.model ||
+    request.text?.format?.type !== "json_object" ||
+    request.stream !== true ||
+    !Array.isArray(request.input)
+  )
     throw new Error("Dry-run request body is invalid");
+  // 返回 Responses API 格式（非流式 JSON 回退路径）
   return jsonResponse({
-    choices: [{ message: { content: JSON.stringify(draft) } }],
+    status: "completed",
+    output: [
+      {
+        type: "message",
+        content: [{ type: "output_text", text: JSON.stringify(draft) }],
+      },
+    ],
   });
 };
 

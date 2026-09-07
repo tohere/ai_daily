@@ -2,6 +2,15 @@ name: Daily AI article generation
 
 on:
   workflow_dispatch:
+    inputs:
+      topic:
+        description: "关键词（用 HN Algolia 搜索选题，留空则用热门榜）"
+        required: false
+        type: string
+      article_urls:
+        description: "文章链接（空格分隔，直接读取创作；填写后忽略关键词）"
+        required: false
+        type: string
   schedule:
     # 每天北京时间 8:00 发布
     - cron: "0 0 * * *"
@@ -34,6 +43,8 @@ jobs:
       HN_REQUEST_TIMEOUT_MS: ${{ vars.HN_REQUEST_TIMEOUT_MS || '12000' }}
       HN_REQUEST_RETRIES: ${{ vars.HN_REQUEST_RETRIES || '3' }}
       DAILY_ARTICLE_COUNT: ${{ vars.DAILY_ARTICLE_COUNT || '2' }}
+      ARTICLE_TOPIC: ${{ github.event.inputs.topic || '' }}
+      ARTICLE_URLS: ${{ github.event.inputs.article_urls || '' }}
 
     steps:
       - name: Checkout
@@ -81,7 +92,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No new articles were generated."
           else
-            git commit -m "自动发布每日 Hacker News AI 文章"
+            git commit -m "自动发布每日 AI 文章"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi

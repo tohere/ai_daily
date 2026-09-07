@@ -84,7 +84,78 @@ test('publishDailyArticles generates the requested count and skips published HN 
     const document = JSON.parse(await readFile(result.writtenFiles[0], 'utf8'))
     assert.deepEqual(document.post.disclosure, WEEKLY_DAY_AI.disclosure)
     assert.equal(document.generation.providerUrl, WEEKLY_DAY_AI.url)
-    assert.ok(logs.some((message) => message.includes('selected 2 Hacker News stories')))
+    assert.ok(logs.some((message) => message.includes('mode: Hacker News front page')))
+    assert.ok(logs.some((message) => message.includes('selected 2 story(ies)')))
+  } finally {
+    await rm(outputDirectory, { recursive: true, force: true })
+  }
+})
+
+test('publishDailyArticles reads direct URLs when ARTICLE_URLS is set', async () => {
+  const outputDirectory = await mkdtemp(path.join(os.tmpdir(), 'ai-daily-publish-urls-'))
+  const logs = []
+  try {
+    const urlEnv = { ...env, ARTICLE_URLS: 'https://source.example.com/post-one  ,  https://source.example.com/post-one' }
+    const aiCalls = []
+    const fetchImpl = async (url) => {
+      if (url.endsWith('/responses')) {
+        aiCalls.push(url)
+        return jsonResponse({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(draft) }] }] })
+      }
+      throw new Error('Unexpected AI request: ' + url)
+    }
+    const sourceFetchImpl = async () => ({
+      ok: true,
+      status: 200,
+      text: async () => '<html><head><title>Direct Source Story</title></head><body><p>Direct source article body text for testing.</p></body></html>',
+    })
+
+    const result = await publishDailyArticles({ env: urlEnv, now, outputDirectory, fetchImpl, sourceFetchImpl, onLog: (message) => logs.push(message), onWarning: () => {} })
+
+    assert.ok(logs.some((message) => message.includes('mode: direct URLs (1 link(s))')))
+    assert.equal(result.documents.length, 1)
+    assert.equal(aiCalls.length, 1)
+    assert.equal(result.documents[0].source.hnId, null)
+    assert.equal(result.documents[0].source.title, 'Direct Source Story')
+    assert.deepEqual(result.documents[0].post.disclosure, WEEKLY_DAY_AI.disclosureWeb)
+    assert.match(result.documents[0].post.slug, /-web-[0-9a-f]{8}$/)
+    const writtenName = path.basename(result.writtenFiles[0])
+    assert.match(writtenName, /^2026-09-01-web-[0-9a-f]{8}\.json$/)
+  } finally {
+    await rm(outputDirectory, { recursive: true, force: true })
+  }
+})
+
+test('publishDailyArticles searches HN Algolia when ARTICLE_TOPIC is set', async () => {
+  const outputDirectory = await mkdtemp(path.join(os.tmpdir(), 'ai-daily-publish-topic-'))
+  const logs = []
+  try {
+    await writeFile(path.join(outputDirectory, 'old.json'), JSON.stringify({ source: { hnId: 201, originalUrl: 'https://example.com/published' } }))
+    const topicEnv = { ...env, ARTICLE_TOPIC: 'vector database' }
+    const fetchImpl = async (url) => {
+      if (url.startsWith('https://hn.algolia.com/api/v1/search')) {
+        assert.ok(url.includes('query=vector%20database'))
+        return jsonResponse({
+          hits: [
+            { objectID: '201', url: 'https://example.com/published', title: 'Published result', author: 'dana', points: 80, num_comments: 20, created_at: '2026-08-30T10:00:00Z' },
+            { objectID: '202', url: 'https://example.com/vector-db', title: 'Vector database results', author: 'erin', points: 60, num_comments: 15, created_at: '2026-08-31T10:00:00Z' },
+            { objectID: '203', url: null, title: 'Ask HN: no link here', author: 'frank', points: 30, num_comments: 5, created_at: '2026-08-31T11:00:00Z' },
+            { objectID: '204', url: 'https://example.com/embeddings', title: 'Embeddings story', author: 'grace', points: 40, num_comments: 8, created_at: '2026-08-31T12:00:00Z' },
+          ],
+        })
+      }
+      if (url.includes('/item/')) return jsonResponse(stories.get(Number(url.match(/item\/(\d+)\.json$/)?.[1])) ?? { id: 1, type: 'story', url: 'https://example.com/x', title: 'x', by: 'y', time: 1_756_700_000, score: 1, descendants: 1 })
+      if (url.endsWith('/responses')) return jsonResponse({ status: 'completed', output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(draft) }] }] })
+      throw new Error('Unexpected request: ' + url)
+    }
+    const sourceFetchImpl = async () => ({ ok: true, status: 200, text: async () => '<p>Source article text.</p>' })
+
+    const result = await publishDailyArticles({ env: topicEnv, now, outputDirectory, fetchImpl, sourceFetchImpl, onLog: (message) => logs.push(message), onWarning: () => {} })
+
+    assert.ok(logs.some((message) => message.includes('mode: topic search "vector database"')))
+    assert.deepEqual(result.selection.selected.map((story) => story.hnId), [202, 204])
+    assert.equal(result.documents.length, 2)
+    assert.deepEqual(result.documents[0].post.disclosure, WEEKLY_DAY_AI.disclosure)
   } finally {
     await rm(outputDirectory, { recursive: true, force: true })
   }

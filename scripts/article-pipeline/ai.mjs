@@ -77,23 +77,24 @@ function compactText(value, limit) {
 
 export function buildArticlePrompt(story, sourceText = "") {
   const context = {
-    hackerNews: {
-      id: story.hnId,
+    source: {
+      type: story.hnId ? "hacker_news_story" : "web_article",
+      hnId: story.hnId ?? null,
+      hackerNewsUrl: story.hnUrl ?? null,
       title: story.title,
       author: story.author,
       score: story.score,
       commentCount: story.commentCount,
       publishedAt: story.publishedAt,
-      hackerNewsUrl: story.hnUrl,
       originalUrl: story.originalUrl,
     },
     originalArticleExcerpt:
       compactText(sourceText, 12000) ||
-      "[Original article text was unavailable. Use only Hacker News metadata and keep claims cautious.]",
+      "[Original article text was unavailable. Use only the source metadata and keep claims cautious.]",
   };
 
   return [
-    "You are an editorial assistant for AI Daily. Produce a careful, original bilingual article based only on the supplied Hacker News context.",
+    "You are an editorial assistant for AI Daily. Produce a careful, original bilingual article based only on the supplied source context.",
     "Return ONLY one valid JSON object. Do not use Markdown fences or commentary before or after the JSON.",
     "Do not copy long passages from the source. Summarize, explain, and add cautious analysis. Never invent facts, numbers, quotes, or capabilities.",
     "Write both Chinese and English versions with equivalent meaning. Every localized string must be non-empty in both languages.",
