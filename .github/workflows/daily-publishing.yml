@@ -12,8 +12,10 @@ on:
         required: false
         type: string
   schedule:
-    # 每天北京时间 8:00 发布
-    - cron: "0 0 * * *"
+    # 主:北京 6:47(UTC 22:47 低峰时段);备:北京 10:23(UTC 02:23)双保险
+    # 近 10 小时内已有文章提交则跳过定时执行,避免重复发布
+    - cron: "47 22 * * *"
+    - cron: "23 2 * * *"
 
 permissions:
   contents: write
@@ -52,21 +54,37 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Skip if an auto-run published recently
+        id: freshness-guard
+        if: github.event_name == 'schedule'
+        run: |
+          recent=$(git log --since="10 hours ago" --oneline -- src/data/generated-posts | head -n 1)
+          if [ -n "$recent" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "近 10 小时已有文章提交,跳过本次定时执行:$recent"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup pnpm
+        if: steps.freshness-guard.outputs.skip != 'true'
         uses: pnpm/action-setup@v6
         with:
           version: 10.33.0
 
       - name: Setup Node.js
+        if: steps.freshness-guard.outputs.skip != 'true'
         uses: actions/setup-node@v6
         with:
           node-version: "22.12.0"
           cache: pnpm
 
       - name: Install dependencies
+        if: steps.freshness-guard.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Show article generation settings
+        if: steps.freshness-guard.outputs.skip != 'true'
         run: |
           echo "AI model: $WEEKLY_DAY_AI_MODEL"
           echo "AI request timeout: $WEEKLY_DAY_AI_REQUEST_TIMEOUT_MS ms"
@@ -74,12 +92,15 @@ jobs:
           echo "AI max tokens: $WEEKLY_DAY_AI_MAX_TOKENS"
 
       - name: Generate two bilingual Hacker News articles
+        if: steps.freshness-guard.outputs.skip != 'true'
         run: pnpm content:ai:publish
 
       - name: Run content tests
+        if: steps.freshness-guard.outputs.skip != 'true'
         run: pnpm test:content
 
       - name: Build Astro site
+        if: steps.freshness-guard.outputs.skip != 'true'
         run: pnpm build
 
       - name: Commit generated articles
