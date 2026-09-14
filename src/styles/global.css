@@ -591,3 +591,24 @@ a:focus-visible,
     transition-duration: 0.01ms !important;
   }
 }
+.virtual-post-list {
+  position: relative;
+}
+.virtual-post-list__spacer {
+  pointer-events: none;
+}
+.virtual-post-list__items {
+  position: absolute;
+  inset: 0 0 auto;
+  width: 100%;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .virtual-post-list__items {
+    will-change: auto;
+  }
+}
+
+.virtual-post-list__items .post-preview:last-child:not(.virtual-post-list__last-item) {
+  border-bottom: 0;
+}

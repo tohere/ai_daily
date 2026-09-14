@@ -1,0 +1,168 @@
+---
+import type { Locale, Post } from '../../data/posts';
+import { formatDate, safeSegment } from '../../utils/blog';
+
+interface Props { posts: Post[]; locale: Locale; }
+type VirtualPost = Pick<Post, 'slug' | 'date' | 'readingTime' | 'category' | 'tags' | 'title' | 'excerpt' | 'isGenerated'>;
+
+const { posts, locale } = Astro.props;
+const basePath = locale === 'zh' ? '/zh' : '/en';
+const virtualPosts: VirtualPost[] = posts.map(({ slug, date, readingTime, category, tags, title, excerpt, isGenerated }) => ({
+  slug, date, readingTime, category, tags, title, excerpt, isGenerated,
+}));
+const serializedPosts = JSON.stringify(virtualPosts).replace(/</g, '\\u003c');
+---
+
+<div class="post-list virtual-post-list" data-virtual-list data-locale={locale} data-base-path={basePath}>
+  <noscript>
+    {posts.map((post) => (
+      <article class="post-preview">
+        <div class="post-preview__meta"><span>{formatDate(post.date, locale)}</span><span>{locale === 'zh' ? '阅读 · ' : ''}{post.readingTime}{locale === 'zh' ? ' 分钟' : ' min read'}</span><span><a href={`${basePath}/categories/${safeSegment(post.category[locale])}/`}>{post.category[locale]}</a></span></div>
+        <h2 class="post-preview__title"><a href={`${basePath}/posts/${post.slug}/`}>{post.title[locale]}</a></h2>
+        <p class="post-preview__excerpt">{post.excerpt[locale]}</p>
+      </article>
+    ))}
+  </noscript>
+  <div class="virtual-post-list__spacer" aria-hidden="true"></div>
+  <div class="virtual-post-list__items"></div>
+</div>
+
+<script define:vars={{ posts: serializedPosts }}>
+  (() => {
+    const lists = document.querySelectorAll('[data-virtual-list]');
+
+    for (const list of lists) {
+      if (list.dataset.initialized) continue;
+      list.dataset.initialized = 'true';
+
+      const items = JSON.parse(posts);
+      const locale = list.dataset.locale;
+      const basePath = list.dataset.basePath;
+      const spacer = list.querySelector('.virtual-post-list__spacer');
+      const container = list.querySelector('.virtual-post-list__items');
+      if (!spacer || !container) continue;
+
+      const estimatedHeight = 220;
+      const overscan = 4;
+      const itemCount = items.length;
+      const heights = new Float64Array(itemCount);
+      const offsets = new Float64Array(itemCount + 1);
+      heights.fill(estimatedHeight);
+      let totalHeight = 0;
+      let frame = 0;
+      let range = { start: -1, end: -1 };
+
+      const dateFormatter = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-CN' : 'en-US', {
+        year: 'numeric', month: 'short', day: 'numeric',
+      });
+      const escape = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+      const segment = (value) => encodeURIComponent(String(value).replace(/[\\/]/g, '-')).replace(/%26/g, '&');
+      const date = (value) => dateFormatter.format(new Date(value + 'T12:00:00'));
+      const offsetFor = (index) => offsets[Math.max(0, Math.min(index, itemCount))];
+      const rebuildOffsets = (fromIndex = 0) => {
+        const start = Math.max(0, Math.min(fromIndex, itemCount));
+        if (start === 0) offsets[0] = 0;
+        for (let index = start; index < itemCount; index += 1) offsets[index + 1] = offsets[index] + heights[index];
+        totalHeight = offsets[itemCount];
+      };
+      const indexAt = (offset) => {
+        if (!itemCount) return 0;
+        let low = 0;
+        let high = itemCount;
+        while (low < high) {
+          const middle = Math.floor((low + high) / 2);
+          if (offsets[middle + 1] <= offset) low = middle + 1;
+          else high = middle;
+        }
+        return Math.min(low, itemCount - 1);
+      };
+      const markup = (post, index) => `<article class="post-preview${index === itemCount - 1 ? ' virtual-post-list__last-item' : ''}" data-post-index="${index}"><div class="post-preview__meta"><span>${date(post.date)}</span><span>${locale === 'zh' ? '阅读 · ' : ''}${post.readingTime}${locale === 'zh' ? ' 分钟' : ' min read'}</span><span><a href="${basePath}/categories/${segment(post.category[locale])}/">${escape(post.category[locale])}</a></span><span class="post-preview__views" data-views-path="${basePath}/posts/${escape(post.slug)}/" hidden title="${locale === 'zh' ? '阅读次数' : 'View count'}"><svg class="post-preview__views-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg><span data-views-value></span></span>${post.isGenerated ? `<span class="post-preview__generated-badge"><strong>${locale === 'zh' ? 'AI 生成' : 'AI generated'}</strong></span>` : ''}</div><h2 class="post-preview__title"><a href="${basePath}/posts/${escape(post.slug)}/">${escape(post.title[locale])}</a></h2><p class="post-preview__excerpt">${escape(post.excerpt[locale])}</p><div class="post-preview__tags">${post.tags[locale].map((tag) => `<a class="post-tag" href="${basePath}/tags/${segment(tag)}/">${escape(tag)}</a>`).join('')}</div></article>`;
+
+      const viewCache = new Map();
+      const viewRequests = new Set();
+      const applyCachedViews = () => {
+        for (const node of container.querySelectorAll('[data-views-path]')) {
+          const value = viewCache.get(node.dataset.viewsPath);
+          if (!Number.isFinite(value)) continue;
+          const valueNode = node.querySelector('[data-views-value]');
+          if (valueNode) valueNode.textContent = value;
+          node.hidden = false;
+        }
+      };
+      const refreshViews = () => {
+        applyCachedViews();
+        const paths = [...new Set([...container.querySelectorAll('[data-views-path]')].map((node) => node.dataset.viewsPath))];
+        const pendingPaths = paths.filter((path) => path && !viewCache.has(path) && !viewRequests.has(path));
+        if (!pendingPaths.length) return;
+        pendingPaths.forEach((path) => viewRequests.add(path));
+        fetch(`/api/views?paths=${encodeURIComponent(pendingPaths.join(','))}`)
+          .then((response) => response.ok ? response.json() : null)
+          .then((data) => {
+            if (!data?.views) return;
+            for (const path of pendingPaths) {
+              const value = data.views[path];
+              if (Number.isFinite(value)) viewCache.set(path, value);
+            }
+          })
+          .catch(() => {})
+          .finally(() => {
+            pendingPaths.forEach((path) => viewRequests.delete(path));
+            applyCachedViews();
+          });
+      };
+      const measureRendered = () => {
+        let firstChanged = itemCount;
+        for (const node of container.querySelectorAll('[data-post-index]')) {
+          const index = Number(node.dataset.postIndex);
+          const measured = node.getBoundingClientRect().height;
+          if (measured && Math.abs(measured - heights[index]) > 1) {
+            heights[index] = measured;
+            firstChanged = Math.min(firstChanged, index);
+          }
+        }
+        return firstChanged;
+      };
+      const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+        const firstChanged = measureRendered();
+        if (firstChanged === itemCount) return;
+        rebuildOffsets(firstChanged);
+        spacer.style.height = `${totalHeight}px`;
+        container.style.transform = `translateY(${offsetFor(range.start)}px)`;
+        schedule();
+      });
+      const render = () => {
+        frame = 0;
+        const pageTop = list.getBoundingClientRect().top + window.scrollY;
+        const listOffset = window.scrollY - pageTop;
+        const renderTop = Math.max(0, listOffset - window.innerHeight);
+        const renderBottom = Math.max(renderTop, listOffset + window.innerHeight * 2);
+        const start = itemCount ? Math.max(0, indexAt(renderTop) - overscan) : 0;
+        const end = itemCount ? Math.min(itemCount, indexAt(renderBottom) + overscan + 1) : 0;
+        const rangeChanged = start !== range.start || end !== range.end;
+
+        if (rangeChanged) {
+          range = { start, end };
+          container.style.transform = `translateY(${offsetFor(start)}px)`;
+          container.innerHTML = items.slice(start, end).map((post, index) => markup(post, start + index)).join('');
+          resizeObserver?.disconnect();
+          if (resizeObserver) container.querySelectorAll('[data-post-index]').forEach((node) => resizeObserver.observe(node));
+        }
+
+        const firstChanged = measureRendered();
+        if (firstChanged !== itemCount) rebuildOffsets(firstChanged);
+        spacer.style.height = `${totalHeight}px`;
+        container.style.transform = `translateY(${offsetFor(start)}px)`;
+        if (rangeChanged) refreshViews();
+        if (firstChanged !== itemCount) schedule();
+      };
+      const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
+
+      rebuildOffsets();
+      spacer.style.height = `${totalHeight}px`;
+      window.addEventListener('scroll', schedule, { passive: true });
+      window.addEventListener('resize', schedule);
+      render();
+    }
+  })();
+</script>
+
