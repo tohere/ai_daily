@@ -9,10 +9,37 @@ export function getStaticPaths() {
 const { locale } = Astro.props;
 const isZh = locale === 'zh';
 const categories = collectCategories(locale);
+const initialCategories = categories.slice(0, 6);
+const additionalCategories = categories.slice(6);
+const additionalCategoriesId = `categories-extra-${locale}`;
 ---
 <BlogLayout locale={locale} title={isZh ? '分类 · AI Daily' : 'Categories · AI Daily'}>
   <section class="page-intro" aria-labelledby="categories-title"><p class="section-eyebrow">Categories</p><h1 id="categories-title" class="page-intro__title">{isZh ? '分类' : 'Categories'}</h1><p class="page-intro__description">{isZh ? '从不同主题进入文章。' : 'Enter the archive through a set of recurring themes.'}</p></section>
-  <div class="taxonomy-grid">
-    {categories.map((category) => <a class="taxonomy-card" href={`/${locale}/categories/${safeSegment(category.name)}/`}><span class="taxonomy-card__name">{category.name}</span><span class="taxonomy-card__count">{category.count} {isZh ? '篇文章' : category.count === 1 ? 'post' : 'posts'}</span></a>)}
+  <div class="taxonomy-list">
+    <div class="taxonomy-grid">
+      {initialCategories.map((category) => <a class="taxonomy-card" href={`/${locale}/categories/${safeSegment(category.name)}/`}><span class="taxonomy-card__name">{category.name}</span><span class="taxonomy-card__count">{category.count} {isZh ? '篇文章' : category.count === 1 ? 'post' : 'posts'}</span></a>)}
+      {additionalCategories.map((category) => <a class="taxonomy-card" data-taxonomy-extra={additionalCategoriesId} aria-hidden="true" hidden href={`/${locale}/categories/${safeSegment(category.name)}/`}><span class="taxonomy-card__name">{category.name}</span><span class="taxonomy-card__count">{category.count} {isZh ? '篇文章' : category.count === 1 ? 'post' : 'posts'}</span></a>)}
+    </div>
+    {additionalCategories.length > 0 && <button class="taxonomy-more-button" type="button" data-taxonomy-toggle aria-controls={additionalCategoriesId} aria-expanded="false" data-more-label={isZh ? '更多分类' : 'More categories'} data-less-label={isZh ? '收起分类' : 'Show fewer categories'}>{isZh ? '更多分类' : 'More categories'}</button>}
   </div>
 </BlogLayout>
+
+<script is:inline>
+  (() => {
+    for (const button of document.querySelectorAll('[data-taxonomy-toggle]')) {
+      if (!(button instanceof HTMLButtonElement) || button.dataset.initialized) continue;
+      button.dataset.initialized = 'true';
+      const targetId = button.getAttribute('aria-controls');
+      const items = [...document.querySelectorAll('[data-taxonomy-extra]')].filter((item) => item.dataset.taxonomyExtra === targetId);
+      const sync = (expanded) => {
+        for (const item of items) {
+          item.hidden = !expanded;
+          item.setAttribute('aria-hidden', String(!expanded));
+        }
+        button.setAttribute('aria-expanded', String(expanded));
+        button.textContent = expanded ? button.dataset.lessLabel : button.dataset.moreLabel;
+      };
+      button.addEventListener('click', () => sync(button.getAttribute('aria-expanded') !== 'true'));
+    }
+  })();
+</script>

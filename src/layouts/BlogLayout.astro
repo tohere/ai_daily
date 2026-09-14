@@ -64,7 +64,7 @@ const enUrl = isZh ? alternateUrl : canonicalUrl;
     <div class="site-container">
       <BlogHeader locale={locale} languagePath={languagePath} client:load />
       <div class="page-layout">
-        <BlogSidebar locale={locale} categories={sidebarCategories} tags={sidebarTags} />
+        <BlogSidebar locale={locale} categories={sidebarCategories} tags={sidebarTags} client:load />
         <main id="main-content" class="main-content" tabindex="-1"><slot /></main>
         <aside class="right-rail" aria-label={isZh ? '补充导航' : 'Complementary navigation'}>
           <slot name="rail">

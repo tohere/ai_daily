@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, shallowRef } from "vue";
 import { safeSegment } from "../../utils/blog";
 
 type Locale = "zh" | "en";
@@ -29,6 +29,23 @@ const copy = computed(() =>
         tags: "Popular tags",
       },
 );
+const showAllCategories = shallowRef(false);
+const visibleCategories = computed(() =>
+  showAllCategories.value ? props.categories : props.categories.slice(0, 6),
+);
+const hasMoreCategories = computed(() => props.categories.length > 6);
+const categoryToggleLabel = computed(() =>
+  showAllCategories.value
+    ? props.locale === "zh"
+      ? "收起分类"
+      : "Show fewer categories"
+    : props.locale === "zh"
+      ? "更多分类"
+      : "More categories",
+);
+const toggleCategories = () => {
+  showAllCategories.value = !showAllCategories.value;
+};
 const categoryHref = (name: string) =>
   `${basePath.value}/categories/${safeSegment(name)}/`;
 const tagHref = (name: string) =>
@@ -44,11 +61,21 @@ const tagHref = (name: string) =>
     </div>
     <section class="sidebar-section">
       <h3>{{ copy.categories }}</h3>
-      <ul>
-        <li v-for="item in categories" :key="item.name">
+      <ul id="sidebar-categories-list">
+        <li v-for="item in visibleCategories" :key="item.name">
           <a :href="categoryHref(item.name)">{{ item.name }}</a>
         </li>
       </ul>
+      <button
+        v-if="hasMoreCategories"
+        class="sidebar-more-button"
+        type="button"
+        aria-controls="sidebar-categories-list"
+        :aria-expanded="showAllCategories"
+        @click="toggleCategories"
+      >
+        {{ categoryToggleLabel }}
+      </button>
     </section>
     <section class="sidebar-section">
       <h3>{{ copy.tags }}</h3>
@@ -119,6 +146,23 @@ const tagHref = (name: string) =>
 }
 .sidebar-section a:hover {
   color: var(--color-accent);
+}
+.sidebar-more-button {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.sidebar-more-button:hover {
+  color: var(--color-ink);
+}
+.sidebar-more-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 .tag-list {
   display: flex;

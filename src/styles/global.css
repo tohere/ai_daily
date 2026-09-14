@@ -612,3 +612,29 @@ a:focus-visible,
 .virtual-post-list__items .post-preview:last-child:not(.virtual-post-list__last-item) {
   border-bottom: 0;
 }
+.taxonomy-list {
+  margin-top: 28px;
+}
+.taxonomy-list .taxonomy-grid {
+  margin-top: 0;
+}
+.taxonomy-more-button {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 16px;
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.taxonomy-more-button:hover {
+  color: var(--color-ink);
+}
+.taxonomy-more-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
