@@ -5,9 +5,9 @@ const LOCALES = ["zh", "en"];
 const MAX_TITLE_LENGTH = 90;
 const MAX_EXCERPT_LENGTH = 220;
 const MAX_BLOCKS = 40;
-const MIN_PARAGRAPHS = 5;
-const MIN_ZH_CHARACTERS = 350;
-const MIN_EN_WORDS = 200;
+const MIN_PARAGRAPHS = 3;
+const MIN_ZH_CHARACTERS = 220;
+const MIN_EN_WORDS = 140;
 
 function fail(path, message) {
   throw new Error("Invalid generated article at " + path + ": " + message);

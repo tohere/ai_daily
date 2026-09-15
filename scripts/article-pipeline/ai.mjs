@@ -52,7 +52,7 @@ export function loadAiConfig(env = process.env) {
     apiKey: requiredString(env, "WEEKLY_DAY_AI_API_KEY"),
     model: requiredString(env, "WEEKLY_DAY_AI_MODEL"),
     temperature,
-    maxTokens: readInteger(env, "WEEKLY_DAY_AI_MAX_TOKENS", 3500, {
+    maxTokens: readInteger(env, "WEEKLY_DAY_AI_MAX_TOKENS", 2400, {
       min: 500,
       max: 20000,
     }),
@@ -98,7 +98,7 @@ export function buildArticlePrompt(story, sourceText = "") {
     "Return ONLY one valid JSON object. Do not use Markdown fences or commentary before or after the JSON.",
     "Do not copy long passages from the source. Summarize, explain, and add cautious analysis. Never invent facts, numbers, quotes, or capabilities.",
     "Write both Chinese and English versions with equivalent meaning. Every localized string must be non-empty in both languages.",
-    "Use 3 to 5 heading blocks and at least 5 substantial paragraph blocks per language. Structure the article with an introduction, key facts, technical explanation, practical implications, limitations or open questions, and a conclusion. Aim for 400-800 Chinese characters and 250-450 English words per language. If the source is brief, add cautious analysis and context without inventing facts. Do not end early or compress the article into a short summary. A quote block is optional. Avoid code blocks unless the source genuinely contains a short code example.",
+    "Keep the article concise and easy to scan. Use 2 to 3 heading blocks and 3 to 4 concise paragraph blocks per language. Cover only the key facts, what it means, and the most important limitation or open question; combine overlapping points instead of repeating them. Aim for 220-400 Chinese characters and 140-260 English words per language. If the source is brief, stay brief rather than padding the article. A quote block is optional; avoid code blocks unless the source genuinely contains a short code example.",
     "The content.zh and content.en fields MUST be JSON arrays, never strings or objects. Every item must be a separate block with type heading, paragraph, quote, or code; heading, paragraph, and quote items must include text: { zh, en }.",
     "The first paragraph must not be the disclosure; the application prepends the disclosure deterministically.",
     "Return this exact shape: { title: { zh, en }, excerpt: { zh, en }, category: { zh, en }, tags: { zh: [], en: [] }, slug: string, content: { zh: PostBlock[], en: PostBlock[] } }.",
